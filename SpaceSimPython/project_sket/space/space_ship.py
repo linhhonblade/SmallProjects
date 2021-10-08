@@ -1,0 +1,2 @@
+class SpaceShip():
+    pass
