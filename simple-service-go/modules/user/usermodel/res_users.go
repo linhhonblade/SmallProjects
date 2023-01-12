@@ -1,5 +1,10 @@
 package usermodel
 
+import (
+	"errors"
+	"strings"
+)
+
 type User struct {
 	Id       int    `json:"id,omitempty" gorm:"column:id"`
 	Login    string `json:"login" gorm:"column:login"`
@@ -22,10 +27,19 @@ func (UserUpdate) TableName() string {
 }
 
 type UserCreate struct {
+	Id       int    `json:"id" gorm:"column:id"`
 	Login    string `json:"login" gorm:"column:login"`
 	Password string `json:"password" gorm:"column:password"`
 }
 
 func (UserCreate) TableName() string {
 	return User{}.TableName()
+}
+
+func (user *UserCreate) Validate() error {
+	user.Login = strings.TrimSpace(user.Login)
+	if len(user.Login) == 0 {
+		return errors.New("user login cannot be blank")
+	}
+	return nil
 }

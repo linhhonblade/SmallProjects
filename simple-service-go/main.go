@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"simple-service-go/component"
 	"simple-service-go/modules/user/usertransport/ginuser"
 	"strconv"
 )
@@ -60,9 +61,11 @@ func runService(db *gorm.DB) error {
 		})
 	})
 
+	appCtx := component.NewAppContext(db)
+
 	users := r.Group("/res_users")
 	{
-		users.POST("", ginuser.CreateUser(db))
+		users.POST("", ginuser.CreateUser(appCtx))
 
 		users.GET("/:id", func(c *gin.Context) {
 			id, err := strconv.Atoi(c.Param("id"))

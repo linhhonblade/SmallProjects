@@ -2,14 +2,15 @@ package ginuser
 
 import (
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
+	"simple-service-go/common"
+	"simple-service-go/component"
 	"simple-service-go/modules/user/userbiz"
 	"simple-service-go/modules/user/usermodel"
 	"simple-service-go/modules/user/userstorage"
 )
 
-func CreateUser(db *gorm.DB) gin.HandlerFunc {
+func CreateUser(ctx component.AppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var data usermodel.UserCreate
 
@@ -20,13 +21,13 @@ func CreateUser(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		store := userstorage.NewSQLStore(db)
+		store := userstorage.NewSQLStore(ctx.GetMainDBConnection())
 		biz := userbiz.NewCreateUserBiz(store)
 		if err := biz.CreateUser(c.Request.Context(), &data); err != nil {
 			c.JSON(401, gin.H{
 				"error": err.Error(),
 			})
 		}
-		c.JSON(http.StatusOK, data)
+		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
 	}
 }
