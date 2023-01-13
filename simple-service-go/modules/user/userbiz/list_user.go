@@ -2,28 +2,32 @@ package userbiz
 
 import (
 	"context"
+	"simple-service-go/common"
 	"simple-service-go/modules/user/usermodel"
 )
 
-type CreateUserStore interface {
-	Create(ctx context.Context, data *usermodel.UserCreate) error
+type ListUserStore interface {
+	ListDataByCondition(
+		ctx context.Context,
+		conditions map[string]interface{},
+		filter *usermodel.Filter,
+		paging *common.Paging,
+		moreKeys ...string,
+	) ([]usermodel.User, error)
 }
 
-type createUserBiz struct {
-	store CreateUserStore
+type listUserBiz struct {
+	store ListUserStore
 }
 
-func NewCreateUserBiz(store CreateUserStore) *createUserBiz {
-	return &createUserBiz{store: store}
+func NewListUserBiz(store ListUserStore) *listUserBiz {
+	return &listUserBiz{store: store}
 }
 
-// CreateUser
-// Nhiệm vụ của thằng này là làm business logic (check điều kiện mật khẩu ít nhất 4 ký tự)
-// Tất cả những gì liên quan đến db vứt cho store nó làm
-func (biz *createUserBiz) CreateUser(ctx context.Context, data *usermodel.UserCreate) error {
-	if err := data.Validate(); err != nil {
-		return err
-	}
-	err := biz.store.Create(ctx, data)
-	return err
+func (biz *listUserBiz) ListUser(
+	ctx context.Context,
+	filter *usermodel.Filter,
+	paging *common.Paging) ([]usermodel.User, error) {
+	result, err := biz.store.ListDataByCondition(ctx, nil, filter, paging)
+	return result, err
 }

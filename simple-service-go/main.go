@@ -86,34 +86,7 @@ func runService(db *gorm.DB) error {
 			c.JSON(http.StatusOK, data)
 		})
 
-		users.GET("", func(c *gin.Context) {
-			var data []User
-			type Filter struct {
-				Lang string `json:"lang" form:"lang"`
-			}
-			var filter Filter
-
-			if err := c.ShouldBind(&filter); err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			newDb := db
-			if filter.Lang != "" {
-				newDb = db.Where("lang = ?", filter.Lang)
-			}
-
-			if err := newDb.Find(&data).Error; err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, data)
-		})
+		users.GET("", ginuser.ListUser(appCtx))
 
 		users.PATCH("/:id", func(c *gin.Context) {
 			id, err := strconv.Atoi(c.Param("id"))
