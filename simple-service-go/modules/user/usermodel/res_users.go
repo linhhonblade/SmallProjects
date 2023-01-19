@@ -2,14 +2,15 @@ package usermodel
 
 import (
 	"errors"
+	"simple-service-go/common"
 	"strings"
 )
 
 type User struct {
-	Id       int    `json:"id,omitempty" gorm:"column:id"`
-	Login    string `json:"login" gorm:"column:login"`
-	Password string `json:"password" gorm:"column:password"`
-	Lang     string `json:"lang" gorm:"column:lang"`
+	common.SQLModel `json:",inline"`
+	Login           string `json:"login" gorm:"column:login"`
+	Password        string `json:"password" gorm:"column:password"`
+	Lang            string `json:"lang" gorm:"column:lang"`
 }
 
 func (User) TableName() string {

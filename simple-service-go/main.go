@@ -9,7 +9,6 @@ import (
 	"os"
 	"simple-service-go/component"
 	"simple-service-go/modules/user/usertransport/ginuser"
-	"strconv"
 )
 
 // CREATE TABLE "public"."res_users" (
@@ -67,55 +66,13 @@ func runService(db *gorm.DB) error {
 	{
 		users.POST("", ginuser.CreateUser(appCtx))
 
-		users.GET("/:id", func(c *gin.Context) {
-			id, err := strconv.Atoi(c.Param("id"))
-			if err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			var data User
-			if err := db.Where("id = ?", id).First(&data).Error; err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-			c.JSON(http.StatusOK, data)
-		})
+		users.GET("/:id", ginuser.GetUser(appCtx))
 
 		users.GET("", ginuser.ListUser(appCtx))
 
-		users.PATCH("/:id", func(c *gin.Context) {
-			id, err := strconv.Atoi(c.Param("id"))
+		users.PATCH("/:id", ginuser.UpdateUser(appCtx))
 
-			if err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			var data UserUpdate
-
-			if err := c.ShouldBind(&data); err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			if err := db.Where("id = ?", id).Updates(&data).Error; err != nil {
-				c.JSON(401, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-
-			c.JSON(http.StatusOK, gin.H{"ok": 1})
-		})
+		users.DELETE("/:id", ginuser.DeleteUser(appCtx))
 	}
 	return r.Run()
 }
