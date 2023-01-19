@@ -15,19 +15,15 @@ func GetUser(ctx component.AppContext) gin.HandlerFunc {
 		id, err := strconv.Atoi(c.Param("id"))
 
 		if err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
+			c.JSON(http.StatusBadRequest, common.ErrInvalidRequest(err))
 			return
 		}
 
 		store := userstorage.NewSQLStore(ctx.GetMainDBConnection())
 		biz := userbiz.NewFindUserBiz(store)
-		data, err := biz.FindUser(c.Request.Context(), id)
+		data, err := biz.GetUser(c.Request.Context(), id)
 		if err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
+			c.JSON(400, err)
 			return
 		}
 		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))

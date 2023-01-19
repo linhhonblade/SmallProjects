@@ -2,6 +2,8 @@ package userstorage
 
 import (
 	"context"
+	"gorm.io/gorm"
+	"simple-service-go/common"
 	"simple-service-go/modules/user/usermodel"
 )
 
@@ -13,7 +15,10 @@ func (s *sqlStore) FindDataByCondition(
 	var data usermodel.User
 
 	if err := s.db.Where(conditions).First(&data).Error; err != nil {
-		return nil, err
+		if err == gorm.ErrRecordNotFound {
+			return nil, common.RecordNotFound
+		}
+		return nil, common.ErrDB(err)
 	}
 	return &data, nil
 }
