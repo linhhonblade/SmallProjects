@@ -70,7 +70,7 @@ func ErrInvalidRequest(err error) *AppError {
 	return NewErrorResponse(err, "invalid request", err.Error(), "ErrInvalidRequest")
 }
 
-func ErrInternall(err error) *AppError {
+func ErrInternal(err error) *AppError {
 	return NewFullErrorResponse(http.StatusInternalServerError, err, "intenral error", err.Error(), "ErrInternal")
 }
 

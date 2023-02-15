@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"simple-service-go/component"
+	"simple-service-go/middleware"
 	"simple-service-go/modules/user/usertransport/ginuser"
 )
 
@@ -52,15 +53,15 @@ func main() {
 }
 
 func runService(db *gorm.DB) error {
+	appCtx := component.NewAppContext(db)
 	r := gin.Default()
+	r.Use(middleware.Recover(appCtx))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
-
-	appCtx := component.NewAppContext(db)
 
 	users := r.Group("/res_users")
 	{
