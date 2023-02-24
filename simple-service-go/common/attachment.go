@@ -35,3 +35,25 @@ func (a *Attachment) Scan(value interface{}) error {
 	*a = att
 	return nil
 }
+
+type Attachments []Attachment
+
+func (a *Attachments) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New(fmt.Sprintf("Failed to unmarshal JSONB value:", value))
+	}
+	var att []Attachment
+	if err := json.Unmarshal(bytes, &att); err != nil {
+		return err
+	}
+	*a = att
+	return nil
+}
+
+func (a *Attachments) Value() (driver.Value, error) {
+	if a == nil {
+		return nil, nil
+	}
+	return json.Marshal(a)
+}

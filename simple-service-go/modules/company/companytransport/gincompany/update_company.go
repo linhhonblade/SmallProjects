@@ -1,30 +1,28 @@
-package ginuser
+package gincompany
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"simple-service-go/common"
 	"simple-service-go/component"
-	"simple-service-go/modules/user/userbiz"
-	"simple-service-go/modules/user/usermodel"
-	"simple-service-go/modules/user/userstorage"
+	"simple-service-go/modules/company/companybiz"
+	"simple-service-go/modules/company/companymodel"
+	"simple-service-go/modules/company/companystorage"
 	"strconv"
 )
 
-func UpdateUser(ctx component.AppContext) gin.HandlerFunc {
+func UpdateCompany(ctx component.AppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.Atoi(c.Param("id"))
-
 		if err != nil {
 			panic(common.ErrInvalidRequest(err))
 		}
-		var data usermodel.UserUpdate
+		var data companymodel.CompanyUpdate
 		if err := c.ShouldBind(&data); err != nil {
 			panic(common.ErrInvalidRequest(err))
 		}
-
-		store := userstorage.NewSQLStore(ctx.GetMainDBConnection())
-		biz := userbiz.NewUpdateUserBiz(store)
+		store := companystorage.NewSQLStore(ctx.GetMainDBConnection())
+		biz := companybiz.NewUpdateCompanyBiz(store)
 		if err := biz.UpdateData(c.Request.Context(), id, &data); err != nil {
 			panic(err)
 		}
