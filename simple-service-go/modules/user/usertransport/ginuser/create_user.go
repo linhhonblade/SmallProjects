@@ -15,18 +15,13 @@ func CreateUser(ctx component.AppContext) gin.HandlerFunc {
 		var data usermodel.UserCreate
 
 		if err := c.ShouldBind(&data); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-			return
+			panic(common.ErrInvalidRequest(err))
 		}
 
 		store := userstorage.NewSQLStore(ctx.GetMainDBConnection())
 		biz := userbiz.NewCreateUserBiz(store)
 		if err := biz.CreateUser(c.Request.Context(), &data); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
+			panic(err)
 		}
 		c.JSON(http.StatusOK, common.SimpleSuccessResponse(data))
 	}

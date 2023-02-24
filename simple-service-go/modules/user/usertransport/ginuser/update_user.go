@@ -16,10 +16,7 @@ func UpdateUser(ctx component.AppContext) gin.HandlerFunc {
 		id, err := strconv.Atoi(c.Param("id"))
 
 		if err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-			return
+			panic(common.ErrInvalidRequest(err))
 		}
 		var data usermodel.UserUpdate
 		if err := c.ShouldBind(&data); err != nil {
@@ -32,10 +29,7 @@ func UpdateUser(ctx component.AppContext) gin.HandlerFunc {
 		store := userstorage.NewSQLStore(ctx.GetMainDBConnection())
 		biz := userbiz.NewUpdateUserBiz(store)
 		if err := biz.UpdateData(c.Request.Context(), id, &data); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-			return
+			panic(err)
 		}
 		c.JSON(http.StatusOK, common.SimpleSuccessResponse(true))
 	}

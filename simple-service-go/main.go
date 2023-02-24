@@ -12,34 +12,6 @@ import (
 	"simple-service-go/modules/user/usertransport/ginuser"
 )
 
-// CREATE TABLE "public"."res_users" (
-// "id" int4 NOT NULL DEFAULT nextval('res_users_id_seq'::regclass),
-// "login" bpchar NOT NULL,
-// "password" bpchar,
-// PRIMARY KEY ("id")
-// );
-
-type User struct {
-	Id       int    `json:"id,omitempty" gorm:"column:id"`
-	Login    string `json:"login" gorm:"column:login"`
-	Password string `json:"password" gorm:"column:password"`
-	Lang     string `json:"lang" gorm:"column:lang"`
-}
-
-func (User) TableName() string {
-	return "res_users"
-}
-
-type UserUpdate struct {
-	Login    *string `json:"login" gorm:"column:login"`
-	Password *string `json:"password" gorm:"column:password"`
-	Lang     *string `json:"lang" gorm:"column:lang"`
-}
-
-func (UserUpdate) TableName() string {
-	return User{}.TableName()
-}
-
 func main() {
 	dsn := os.Getenv("DBConnectionStr")
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -63,7 +35,7 @@ func runService(db *gorm.DB) error {
 		})
 	})
 
-	users := r.Group("/res_users")
+	users := r.Group("/users")
 	{
 		users.POST("", ginuser.CreateUser(appCtx))
 

@@ -10,19 +10,23 @@ const EntityName = "User"
 
 type User struct {
 	common.SQLModel `json:",inline"`
-	Login           string `json:"login" gorm:"column:login"`
-	Password        string `json:"password" gorm:"column:password"`
-	Lang            string `json:"lang" gorm:"column:lang"`
+	Login           string             `json:"login" gorm:"column:login"`
+	Password        string             `json:"password" gorm:"column:password"`
+	Lang            string             `json:"lang" gorm:"column:lang"`
+	Fullname        string             `json:"fullname" gorm:"column:fullname"`
+	ProfilePic      *common.Attachment `json:"profile_pic" gorm:"column:profile_pic"`
 }
 
 func (User) TableName() string {
-	return "res_users"
+	return "users"
 }
 
 type UserUpdate struct {
-	Login    *string `json:"login" gorm:"column:login"`
-	Password *string `json:"password" gorm:"column:password"`
-	Lang     *string `json:"lang" gorm:"column:lang"`
+	Login      *string            `json:"login" gorm:"column:login"`
+	Password   *string            `json:"password" gorm:"column:password"`
+	Lang       *string            `json:"lang" gorm:"column:lang"`
+	Fullname   string             `json:"fullname" gorm:"column:fullname"`
+	ProfilePic *common.Attachment `json:"profile_pic" gorm:"column:profile_pic"`
 }
 
 func (UserUpdate) TableName() string {
@@ -30,9 +34,11 @@ func (UserUpdate) TableName() string {
 }
 
 type UserCreate struct {
-	Id       int    `json:"id" gorm:"column:id"`
-	Login    string `json:"login" gorm:"column:login"`
-	Password string `json:"password" gorm:"column:password"`
+	Id         int                `json:"id" gorm:"column:id"`
+	Login      string             `json:"login" gorm:"column:login"`
+	Password   string             `json:"password" gorm:"column:password"`
+	Fullname   string             `json:"fullname" gorm:"column:fullname"`
+	ProfilePic *common.Attachment `json:"profile_pic" gorm:"column:profile_pic"`
 }
 
 func (UserCreate) TableName() string {

@@ -14,18 +14,12 @@ func ListUser(ctx component.AppContext) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var filter usermodel.Filter
 		if err := c.ShouldBind(&filter); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-			return
+			panic(common.ErrInvalidRequest(err))
 		}
 
 		var paging common.Paging
 		if err := c.ShouldBind(&paging); err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
-			return
+			panic(common.ErrInvalidRequest(err))
 		}
 		paging.Fulfill()
 
@@ -33,9 +27,7 @@ func ListUser(ctx component.AppContext) gin.HandlerFunc {
 		biz := userbiz.NewListUserBiz(store)
 		result, err := biz.ListUser(c.Request.Context(), &filter, &paging)
 		if err != nil {
-			c.JSON(401, gin.H{
-				"error": err.Error(),
-			})
+			panic(err)
 		}
 		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, filter))
 	}
