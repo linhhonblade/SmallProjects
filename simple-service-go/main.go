@@ -10,6 +10,7 @@ import (
 	"simple-service-go/component"
 	"simple-service-go/middleware"
 	"simple-service-go/modules/company/companytransport/gincompany"
+	"simple-service-go/modules/upload/uploadtransport/ginupload"
 	"simple-service-go/modules/user/usertransport/ginuser"
 )
 
@@ -35,6 +36,8 @@ func runService(db *gorm.DB) error {
 			"message": "pong",
 		})
 	})
+
+	r.POST("/upload", ginupload.Upload(appCtx))
 
 	users := r.Group("/users")
 	{
