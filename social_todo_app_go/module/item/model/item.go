@@ -8,6 +8,7 @@ import (
 
 var (
 	ErrTitleCannotEmpty = errors.New("Title cannot be empty")
+	ErrItemDeleted      = errors.New("Item is deleted")
 )
 
 type TodoItem struct {
