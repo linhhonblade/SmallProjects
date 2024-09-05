@@ -18,7 +18,7 @@ type TodoItem struct {
 	Status      string `json:"status" gorm:"column:status;"`
 }
 
-func (TodoItem) TableName() string { return "todo_item" }
+func (TodoItem) TableName() string { return "item" }
 
 type TodoItemCreation struct {
 	Id          int    `json:"id" gorm:"column:id;"`
