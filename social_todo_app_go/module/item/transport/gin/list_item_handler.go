@@ -27,7 +27,7 @@ func ListItem(db *gorm.DB) func(ctx *gin.Context) {
 		business := biz.NewListItemBiz(store)
 		res, err := business.ListItem(c.Request.Context(), &queryString.Filter, &queryString.Paging)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, err)
 			return
 		}
 		c.JSON(http.StatusOK, common.NewSuccessResponse(res, queryString.Paging, queryString.Filter))

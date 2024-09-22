@@ -77,7 +77,7 @@ func ErrInternal(err error) *AppError {
 func ErrCannotListEntity(entity string, err error) *AppError {
 	return NewCustomError(
 		err,
-		fmt.Sprintf("Cannot list %s", strings.Tolower(entity)),
+		fmt.Sprintf("Cannot list %s", strings.ToLower(entity)),
 		fmt.Sprintf("ErrCannotList%s", entity),
 	)
 }
@@ -102,7 +102,7 @@ func ErrCannotGetEntity(entity string, err error) *AppError {
 	return NewCustomError(
 		err,
 		fmt.Sprintf("Cannot get %s", strings.ToLower(entity)),
-		fmt.Sprintf("ErrCannotGets", entity),
+		fmt.Sprintf("ErrCannotGet%s", entity),
 	)
 }
 

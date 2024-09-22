@@ -2,6 +2,7 @@ package biz
 
 import (
 	"golang.org/x/net/context"
+	"social_todo_app_go/common"
 	"social_todo_app_go/module/item/model"
 )
 
@@ -24,7 +25,7 @@ func (biz *createItemBiz) CreateNewItem(ctx context.Context, data *model.TodoIte
 		return err
 	}
 	if err := biz.store.CreateItem(ctx, data); err != nil {
-		return err
+		return common.ErrCannotCreateEntity(model.EntityName, err)
 	}
 	return nil
 }

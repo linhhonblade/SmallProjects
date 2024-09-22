@@ -21,13 +21,13 @@ func (s *sqlStore) ListItem(
 	}
 	if err := s.db.Table(model.TodoItem{}.TableName()).
 		Count(&paging.Total).Error; err != nil {
-		return nil, err
+		return nil, common.ErrDB(err)
 	}
 	if err := db.Order("id desc").
 		Offset((paging.Page - 1) * paging.Limit).
 		Limit(paging.Limit).
 		Find(&res).Error; err != nil {
-		return nil, err
+		return nil, common.ErrDB(err)
 	}
 	return res, nil
 }

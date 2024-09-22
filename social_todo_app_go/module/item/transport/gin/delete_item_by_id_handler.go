@@ -23,7 +23,7 @@ func DeleteItemById(db *gorm.DB) func(ctx *gin.Context) {
 		business := biz.NewDeleteItemBiz(store)
 		err = business.DeleteItemById(c.Request.Context(), id)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, err)
 			return
 		}
 		c.JSON(http.StatusOK, common.SimpleSuccessResponse(true))

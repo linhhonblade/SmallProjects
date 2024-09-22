@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"os"
 	"social_todo_app_go/common"
+	"social_todo_app_go/middleware"
 	"social_todo_app_go/module/item/model"
 	ginitem "social_todo_app_go/module/item/transport/gin"
+	"social_todo_app_go/module/upload"
 )
 
 func main() {
@@ -25,8 +27,11 @@ func main() {
 	/////////////////////////////////////////////
 
 	r := gin.Default()
+	r.Use(middleware.Recover())
+	r.Static("/static", "./static")
 	v1 := r.Group("/v1")
 	{
+		v1.PUT("/upload", upload.Upload(db))
 		items := v1.Group("/items")
 		{
 			items.GET("", ginitem.ListItem(db))

@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"social_todo_app_go/common"
 	"social_todo_app_go/module/item/model"
 )
 
@@ -21,13 +22,13 @@ func NewDeleteItemBiz(store DeleteItemStorage) *deleteItemBiz {
 func (biz *deleteItemBiz) DeleteItemById(ctx context.Context, id int) error {
 	data, err := biz.store.GetItem(ctx, map[string]interface{}{"id": id})
 	if err != nil {
-		return err
+		return common.ErrCannotGetEntity(model.EntityName, err)
 	}
 	if data.Status == "deleted" {
-		return model.ErrItemDeleted
+		return common.ErrCannotDeleteEntity(model.EntityName, model.ErrItemDeleted)
 	}
 	if err := biz.store.DeleteItem(ctx, map[string]interface{}{"id": id}); err != nil {
-		return err
+		return common.ErrCannotDeleteEntity(model.EntityName, err)
 	}
 	return nil
 }

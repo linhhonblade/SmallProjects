@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"social_todo_app_go/common"
 	"social_todo_app_go/module/item/model"
 )
 
@@ -24,10 +25,10 @@ func (biz *updateItemBiz) UpdateItemById(ctx context.Context, id int, dataUpdate
 		return err
 	}
 	if data.Status == "deleted" {
-		return model.ErrItemDeleted
+		return common.ErrCannotUpdateEntity(model.EntityName, model.ErrItemDeleted)
 	}
 	if err := biz.store.UpdateItem(ctx, map[string]interface{}{"id": id}, dataUpdate); err != nil {
-		return err
+		return common.ErrCannotUpdateEntity(model.EntityName, err)
 	}
 	return nil
 }
