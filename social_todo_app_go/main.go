@@ -11,6 +11,7 @@ import (
 	"social_todo_app_go/middleware"
 	"social_todo_app_go/module/item/model"
 	ginitem "social_todo_app_go/module/item/transport/gin"
+	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
 )
 
@@ -39,6 +40,14 @@ func main() {
 			items.GET("/:id", ginitem.GetItemById(db))
 			items.PATCH("/:id", ginitem.UpdateItemById(db))
 			items.DELETE("/:id", ginitem.DeleteItemById(db))
+		}
+		products := v1.Group("/products")
+		{
+			products.GET("", ginproduct.ListProduct(db))
+			products.GET("/:id", ginproduct.GetProductById(db))
+			products.POST("", ginproduct.CreateProduct(db))
+			products.PATCH("/:id", ginproduct.UpdateProductById(db))
+			products.DELETE("/:id", ginproduct.DeleteProductById(db))
 		}
 	}
 	r.GET("/ping", func(c *gin.Context) {
