@@ -7,10 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"social_todo_app_go/common"
 	"social_todo_app_go/middleware"
-	"social_todo_app_go/module/item/model"
-	ginitem "social_todo_app_go/module/item/transport/gin"
+	gincategory "social_todo_app_go/module/category/transport/gin"
 	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
 )
@@ -33,13 +31,13 @@ func main() {
 	v1 := r.Group("/v1")
 	{
 		v1.PUT("/upload", upload.Upload(db))
-		items := v1.Group("/items")
+		categories := v1.Group("/categories")
 		{
-			items.GET("", ginitem.ListItem(db))
-			items.POST("", ginitem.CreateItem(db))
-			items.GET("/:id", ginitem.GetItemById(db))
-			items.PATCH("/:id", ginitem.UpdateItemById(db))
-			items.DELETE("/:id", ginitem.DeleteItemById(db))
+			categories.GET("", gincategory.ListCategory(db))
+			categories.POST("", gincategory.CreateCategory(db))
+			categories.GET("/:id", gincategory.GetCategoryById(db))
+			categories.PATCH("/:id", gincategory.UpdateCategoryById(db))
+			categories.DELETE("/:id", gincategory.DeleteCategoryById(db))
 		}
 		products := v1.Group("/products")
 		{
@@ -57,44 +55,5 @@ func main() {
 	})
 	if err := r.Run(":3000"); err != nil {
 		log.Fatalln(err)
-	}
-}
-
-func ListItem(db *gorm.DB) func(ctx *gin.Context) {
-	return func(c *gin.Context) {
-
-		var paging common.Paging
-		if err := c.ShouldBind(&paging); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		paging.Process()
-
-		var result []model.TodoItem
-		// Prevent count(*)
-		// Instead, use count("id")
-
-		db = db.Where("active = ?", true)
-		if err := db.Table(model.TodoItem{}.TableName()).Select("id").Count(&paging.Total).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		if err := db.Table(model.TodoItem{}.TableName()).
-			Select("id, title, description, status").
-			Offset((paging.Page - 1) * paging.Limit).
-			Limit(paging.Limit).
-			Order("id desc").
-			Find(&result).Error; err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		c.JSON(http.StatusOK, common.NewSuccessResponse(result, paging, nil))
 	}
 }

@@ -17,8 +17,8 @@ func (s *sqlStore) ListProduct(
 		if v := f.Status; v != "" {
 			db = db.Where("status = ?", v)
 		}
-		if v := f.CategId; v != 0 {
-			db = db.Where("categ_id = ?", v)
+		if v := f.CategoryId; v != 0 {
+			db = db.Where("category_id = ?", v)
 		}
 		if v := f.Type; v != "" {
 			db = db.Where("type = ?", v)

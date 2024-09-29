@@ -2,46 +2,51 @@ package model
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"social_todo_app_go/common"
+	"strings"
 )
 
 var (
-	ErrProductDeleted = errors.New("Product is deleted")
+	ErrNameCannotEmpty = errors.New("Title cannot be empty")
+	ErrCategoryDeleted = errors.New("Item is deleted")
 )
 
 const (
-	EntityName = "Product"
+	EntityName = "Category"
 )
 
-type Product struct {
+type Category struct {
 	common.SQLModel
 	Name        string        `json:"name" gorm:"column:name;"`
 	Description string        `json:"description" gorm:"column:description;"`
 	Image       *common.Image `json:"image" gorm:"column:image;"`
-	Type        string        `json:"type" gorm:"column:type;"`
-	CategoryId  int           `json:"category_id" gorm:"column:category_id;"`
 }
 
-func (Product) TableName() string { return "product" }
+func (Category) TableName() string { return "category" }
 
-type ProductCreation struct {
+type CategoryCreation struct {
 	common.SQLModel
 	Name        string        `json:"name" gorm:"column:name;"`
-	Type        string        `json:"type" gorm:"column:type;"`
 	Description string        `json:"description" gorm:"column:description;"`
-	CategoryId  uuid.UUID     `json:"category_id" gorm:"column:category_id;"`
 	Image       *common.Image `json:"image" gorm:"column:image;"`
 }
 
-func (ProductCreation) TableName() string { return Product{}.TableName() }
+func (CategoryCreation) TableName() string { return Category{}.TableName() }
 
-type ProductUpdate struct {
+func (i *CategoryCreation) Validate() error {
+	i.Name = strings.TrimSpace(i.Name)
+
+	if i.Name == "" {
+		return ErrNameCannotEmpty
+	}
+	return nil
+}
+
+type CategoryUpdate struct {
 	Name        string        `json:"name" gorm:"column:name;"`
 	Description *string       `json:"description" gorm:"column:description;"`
 	Status      string        `json:"status" gorm:"column:status;"`
 	Image       *common.Image `json:"image" gorm:"column:image;"`
-	Type        string        `json:"type" gorm:"column:type;"`
 }
 
-func (ProductUpdate) TableName() string { return Product{}.TableName() }
+func (CategoryUpdate) TableName() string { return Category{}.TableName() }
