@@ -15,9 +15,13 @@ type SQLModel struct {
 func GenNewModel() SQLModel {
 	now := time.Now().UTC()
 	return SQLModel{
-		Id:         uuid.New(),
+		Id:         GenUUID(),
 		CreateDate: now,
 		WriteDate:  now,
 		Status:     "active",
 	}
+}
+func GenUUID() uuid.UUID {
+	NewId, _ := uuid.NewV7()
+	return NewId
 }

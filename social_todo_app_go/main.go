@@ -9,6 +9,7 @@ import (
 	"os"
 	"social_todo_app_go/middleware"
 	gincategory "social_todo_app_go/module/category/transport/gin"
+	"social_todo_app_go/module/product/controller"
 	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
 )
@@ -43,7 +44,7 @@ func main() {
 		{
 			products.GET("", ginproduct.ListProduct(db))
 			products.GET("/:id", ginproduct.GetProductById(db))
-			products.POST("", ginproduct.CreateProduct(db))
+			products.POST("", controller.CreateProductAPI(db))
 			products.PATCH("/:id", ginproduct.UpdateProductById(db))
 			products.DELETE("/:id", ginproduct.DeleteProductById(db))
 		}
