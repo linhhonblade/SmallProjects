@@ -10,6 +10,8 @@ import (
 	"social_todo_app_go/middleware"
 	gincategory "social_todo_app_go/module/category/transport/gin"
 	"social_todo_app_go/module/product/controller"
+	productusecase "social_todo_app_go/module/product/domain/usecase"
+	productpostgres "social_todo_app_go/module/product/repository/postgres"
 	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
 )
@@ -29,6 +31,11 @@ func main() {
 	r := gin.Default()
 	r.Use(middleware.Recover())
 	r.Static("/static", "./static")
+
+	// Setup dependencies
+	repo := productpostgres.NewPostgresRepository(db)
+	useCase := productusecase.NewCreateProductUseCase(repo)
+	api := controller.NewAPIController(useCase)
 	v1 := r.Group("/v1")
 	{
 		v1.PUT("/upload", upload.Upload(db))
@@ -44,7 +51,7 @@ func main() {
 		{
 			products.GET("", ginproduct.ListProduct(db))
 			products.GET("/:id", ginproduct.GetProductById(db))
-			products.POST("", controller.CreateProductAPI(db))
+			products.POST("", api.CreateProductAPI(db))
 			products.PATCH("/:id", ginproduct.UpdateProductById(db))
 			products.DELETE("/:id", ginproduct.DeleteProductById(db))
 		}
