@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/google/uuid"
+	"strings"
 )
 
 type User struct {
@@ -11,10 +12,10 @@ type User struct {
 	email     string
 	password  string
 	salt      string
-	role      string
+	role      Role
 }
 
-func NewUser(id uuid.UUID, firstName string, lastName string, email string, password string, salt string, role string) (*User, error) {
+func NewUser(id uuid.UUID, firstName string, lastName string, email string, password string, salt string, role Role) (*User, error) {
 	// TODO: Add validation
 	return &User{id: id, firstName: firstName, lastName: lastName, email: email, password: password, salt: salt, role: role}, nil
 }
@@ -43,7 +44,7 @@ func (u User) Salt() string {
 	return u.salt
 }
 
-func (u User) Role() string {
+func (u User) Role() Role {
 	return u.role
 }
 
@@ -52,5 +53,19 @@ type Role int
 const (
 	RoleUser Role = iota
 	RoseAdmin
-	
+)
 
+func (r Role) String() string {
+	return [...]string{"user", "admin"}[r]
+}
+
+func GetRole(s string) Role {
+	switch strings.TrimSpace(strings.ToLower(s)) {
+	case "user":
+		return RoleUser
+	case "admin":
+		return RoseAdmin
+	default:
+		return RoleUser
+	}
+}

@@ -145,4 +145,4 @@ func ErrNoPermission(err error) *AppError {
 	)
 }
 
-var RecordNotFound = errors.New("record not found")
+var ErrRecordNotFound = errors.New("record not found")
