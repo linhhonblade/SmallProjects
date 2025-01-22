@@ -7,7 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"social_todo_app_go/common"
+	"social_todo_app_go/builder"
+	"social_todo_app_go/component"
 	"social_todo_app_go/middleware"
 	gincategory "social_todo_app_go/module/category/transport/gin"
 	"social_todo_app_go/module/product/controller"
@@ -16,7 +17,6 @@ import (
 	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
 	"social_todo_app_go/module/user/infras/httpservice"
-	"social_todo_app_go/module/user/infras/repository"
 	"social_todo_app_go/module/user/usecase"
 )
 
@@ -59,10 +59,15 @@ func main() {
 			products.PATCH("/:id", ginproduct.UpdateProductById(db))
 			products.DELETE("/:id", ginproduct.DeleteProductById(db))
 		}
+		jwtSecret := os.Getenv("JWT_SECRET")
+		tokenProvider := component.NewJWTProvider(jwtSecret, 60*60*24*7, 60*60*24*14)
 
-		userUC := usecase.NewUseCase(repository.NewUserRepo(db), &common.Hasher{})
+		//userUC := usecase.NewUseCase(repository.NewUserRepo(db), &common.Hasher{}, tokenProvider, repository.NewUserSessionPostgresRepo(db))
+		//userUC := usecase.NewUCWithBuilder(builder.NewSimpleBuilder(db, tokenProvider))
+		userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
 		httpservice.NewUserService(userUC).Routes(v1)
 	}
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
