@@ -13,6 +13,7 @@ type UserDto struct {
 	Password  string    `gorm:"column:password;"`
 	Salt      string    `gorm:"column:salt;"`
 	Role      string    `gorm:"column:role;"`
+	Status    string    `gorm:"column:status;"`
 }
 
 func (dto *UserDto) ToEntity() (*domain.User, error) {
@@ -23,5 +24,7 @@ func (dto *UserDto) ToEntity() (*domain.User, error) {
 		dto.Email,
 		dto.Password,
 		dto.Salt,
-		domain.GetRole(dto.Role))
+		domain.GetRole(dto.Role),
+		dto.Status,
+	)
 }

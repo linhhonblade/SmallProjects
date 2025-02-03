@@ -2,6 +2,7 @@ package builder
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"social_todo_app_go/common"
 	"social_todo_app_go/module/user/domain"
@@ -42,6 +43,14 @@ func (s simpleBuilder) BuildSessionCmdRepo() usecase.SessionCommandRepository {
 	return repository.NewUserSessionPostgresRepo(s.db)
 }
 
+func (s simpleBuilder) BuildSessionRepo() usecase.SessionRepository {
+	return repository.NewUserSessionPostgresRepo(s.db)
+}
+
+func (s simpleBuilder) BuildUserRepo() usecase.UserRepository {
+	return repository.NewUserRepo(s.db)
+}
+
 type complexBuilder struct {
 	simpleBuilder
 }
@@ -66,6 +75,18 @@ func (c userCacheRepo) FindByEmail(ctx context.Context, email string) (*domain.U
 		return nil, err
 	}
 	c.cache[email] = user
+	return user, nil
+}
+
+func (c userCacheRepo) FindByID(ctx context.Context, userId uuid.UUID) (*domain.User, error) {
+	if user, ok := c.cache[userId.String()]; ok {
+		return user, nil
+	}
+	user, err := c.realRepo.FindByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	c.cache[userId.String()] = user
 	return user, nil
 }
 

@@ -2,12 +2,14 @@ package usecase
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"social_todo_app_go/module/user/domain"
 )
 
 type UseCase interface {
 	Register(ctx context.Context, dto EmailPasswordRegistrationDTO) error
 	LoginEmailPassword(ctx context.Context, dto EmailPasswordLoginDTO) (*TokenResponseDTO, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*TokenResponseDTO, error)
 }
 
 type Hasher interface {
@@ -25,6 +27,7 @@ type TokenProvider interface {
 type useCase struct {
 	*registerUC
 	*loginEmailPasswordUC
+	*refreshTokenUC
 }
 
 type Builder interface {
@@ -34,19 +37,23 @@ type Builder interface {
 	BuildSessionCmdRepo() SessionCommandRepository
 	BuildHasher() Hasher
 	BuildTokenProvider() TokenProvider
+	BuildSessionRepo() SessionRepository
+	BuildUserRepo() UserRepository
 }
 
 func NewUCWithBuilder(b Builder) UseCase {
 	return &useCase{
 		registerUC:           NewRegisterUC(b.BuildUserQueryRepo(), b.BuildUserCmdRepo(), b.BuildHasher()),
 		loginEmailPasswordUC: NewLoginEmailPasswordUC(b.BuildUserQueryRepo(), b.BuildTokenProvider(), b.BuildSessionCmdRepo(), b.BuildHasher()),
+		refreshTokenUC:       NewRefreshTokenUC(b.BuildUserRepo(), b.BuildSessionRepo(), b.BuildTokenProvider(), b.BuildHasher()),
 	}
 }
 
 func NewUseCase(repo UserRepository, hasher Hasher, tokenProvider TokenProvider, sessionRepo SessionRepository) UseCase {
 	return &useCase{
 		registerUC:           NewRegisterUC(repo, repo, hasher),
-		loginEmailPasswordUC: NewLoginEmailPasswordUC(repo, tokenProvider, sessionRepo, hasher)}
+		loginEmailPasswordUC: NewLoginEmailPasswordUC(repo, tokenProvider, sessionRepo, hasher),
+		refreshTokenUC:       NewRefreshTokenUC(repo, sessionRepo, tokenProvider, hasher)}
 }
 
 type UserRepository interface {
@@ -56,6 +63,7 @@ type UserRepository interface {
 
 type UserQueryRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 }
 
 type UserCommandRepository interface {
@@ -64,10 +72,15 @@ type UserCommandRepository interface {
 
 type SessionRepository interface {
 	SessionCommandRepository
+	SessionQueryRepository
 }
 
 type SessionCommandRepository interface {
 	Create(ctx context.Context, session *domain.UserSession) error
+	Delete(ctx context.Context, sessionId uuid.UUID) error
 }
 
-type SessionQueryRepository interface{}
+type SessionQueryRepository interface {
+	Find(ctx context.Context, id uuid.UUID) (*domain.UserSession, error)
+	FindByRefreshToken(ctx context.Context, refreshToken string) (*domain.UserSession, error)
+}
