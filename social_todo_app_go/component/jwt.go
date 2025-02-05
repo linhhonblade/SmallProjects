@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	sctx "github.com/linhhonblade/service-context"
 	"time"
 )
 
@@ -39,7 +40,8 @@ func NewJWT(id string) *jwtx {
 	return &jwtx{id: id}
 }
 
-func (j jwtx) ID() string {
+// Implement Component interface in service-context package
+func (j *jwtx) ID() string {
 	return j.id
 }
 func (j *jwtx) InitFlags() {
@@ -49,6 +51,18 @@ func (j *jwtx) InitFlags() {
 		defaultSecret, "Secret key to sign JWT")
 	flag.IntVar(&j.expireTokenInSeconds, "jwt-exp-sec", defaultExpireTokenInSecond, "Number of seconds access token will expire")
 	flag.IntVar(&j.expireRefreshInSeconds, "jwt-exp-refresh-sec", defaultExpireRefreshInSecond, "Number of seconds refresh token will expire")
+}
+func (j *jwtx) Activate(_ sctx.ServiceContext) error {
+	if len(j.secret) != 32 {
+		return fmt.Errorf("%w: %v", ErrSecretKeyNotValid, len(j.secret))
+	}
+	if j.expireTokenInSeconds < 60*60*24 {
+		return fmt.Errorf("%w: %v", ErrTokenLifeTimeTooShort, j.expireTokenInSeconds)
+	}
+	return nil
+}
+func (j *jwtx) Stop() error {
+	return nil
 }
 
 func (j *jwtx) IssueToken(ctx context.Context, id, sub string) (token string, err error) {
@@ -92,4 +106,11 @@ func (j *jwtx) ParseToken(ctx context.Context, tokenString string) (claims *jwt.
 		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 	return &rc, nil
+}
+
+type TokenProvider interface {
+	IssueToken(ctx context.Context, id, sub string) (token string, err error)
+	TokenExpiredInSeconds() int
+	TokenRefreshInSeconds() int
+	ParseToken(ctx context.Context, tokenString string) (claims *jwt.RegisteredClaims, err error)
 }

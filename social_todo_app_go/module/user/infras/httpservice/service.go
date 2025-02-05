@@ -2,16 +2,19 @@ package httpservice
 
 import (
 	"github.com/gin-gonic/gin"
+	sctx "github.com/linhhonblade/service-context"
 	"net/http"
+	"social_todo_app_go/common"
 	"social_todo_app_go/module/user/usecase"
 )
 
 type service struct {
-	uc usecase.UseCase
+	uc   usecase.UseCase
+	sctx sctx.ServiceContext
 }
 
-func NewUserService(uc usecase.UseCase) service {
-	return service{uc}
+func NewUserService(uc usecase.UseCase, sctx sctx.ServiceContext) service {
+	return service{uc: uc, sctx: sctx}
 }
 
 func (s service) handleRegister() gin.HandlerFunc {
@@ -24,7 +27,7 @@ func (s service) handleRegister() gin.HandlerFunc {
 		}
 
 		if err := s.uc.Register(c.Request.Context(), dto); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			common.WriteErrorResponse(c, err)
 			return
 		}
 

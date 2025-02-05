@@ -2,11 +2,10 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	sctx "github.com/linhhonblade/service-context"
+	"github.com/linhhonblade/service-context/component/gormc"
 	"log"
 	"net/http"
-	"os"
 	"social_todo_app_go/builder"
 	"social_todo_app_go/common"
 	"social_todo_app_go/component"
@@ -22,23 +21,29 @@ import (
 	"social_todo_app_go/module/user/usecase"
 )
 
+func newService() sctx.ServiceContext {
+	return sctx.NewServiceContext(
+		sctx.WithName("social_todo_app_go"),
+		sctx.WithComponent(gormc.NewGormDB(common.KeyGormDB, "postgres")),
+		sctx.WithComponent(component.NewJWT(common.KeyJWT)),
+	)
+}
+
 func main() {
-	dsn := os.Getenv("DB_CONN")
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if os.Getenv("DB_DEBUG") == "true" {
-		db = db.Debug()
-	}
-	if err != nil {
+
+	service := newService()
+
+	if err := service.Load(); err != nil {
 		log.Fatalln(err)
 	}
+	db := service.MustGet(common.KeyGormDB).(common.DBContext).GetDB()
 	log.Println("DB Connection: ", db)
 	/////////////////////////////////////////////
 
 	r := gin.Default()
-	jwtSecret := os.Getenv("JWT_SECRET")
-	tokenProvider := component.NewJWTProvider(jwtSecret, 60*60*24*7, 60*60*24*14)
+	tokenProvider := service.MustGet(common.KeyJWT).(component.TokenProvider)
 
-	// r.Use(middleware.RequireAuth())
+	r.Use(middleware.Recovery())
 	authClient := usecase.NewIntrospectUC(repository.NewUserRepo(db), repository.NewUserSessionPostgresRepo(db), tokenProvider)
 	r.Static("/static", "./static")
 
@@ -69,7 +74,7 @@ func main() {
 		//userUC := usecase.NewUseCase(repository.NewUserRepo(db), &common.Hasher{}, tokenProvider, repository.NewUserSessionPostgresRepo(db))
 		//userUC := usecase.NewUCWithBuilder(builder.NewSimpleBuilder(db, tokenProvider))
 		userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
-		httpservice.NewUserService(userUC).Routes(v1)
+		httpservice.NewUserService(userUC, service).Routes(v1)
 	}
 
 	r.GET("/ping", middleware.RequireAuth(authClient), func(c *gin.Context) {

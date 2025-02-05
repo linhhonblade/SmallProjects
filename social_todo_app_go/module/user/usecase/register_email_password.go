@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"github.com/linhhonblade/service-context/core"
 	"social_todo_app_go/common"
 	"social_todo_app_go/module/user/domain"
 )
@@ -26,20 +27,20 @@ func (uc *registerUC) Register(ctx context.Context, dto EmailPasswordRegistratio
 
 	user, err := uc.userQueryRepo.FindByEmail(ctx, dto.Email)
 	if user != nil {
-		return domain.ErrEmailHasExisted
+		return core.ErrBadRequest.WithError(domain.ErrEmailHasExisted.Error())
 	}
 	if err != nil && !errors.Is(err, common.ErrRecordNotFound) {
-		return err
+		return core.ErrInternalServerError.WithError("cannot register").WithDebug(err.Error())
 	}
 
 	salt, err := uc.hasher.RandomStr(30)
 	if err != nil {
-		return err
+		return core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	hashedPassword, err := uc.hasher.HashPassword(salt, dto.Password)
 	if err != nil {
-		return err
+		return core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	userEntity, err := domain.NewUser(
@@ -53,11 +54,11 @@ func (uc *registerUC) Register(ctx context.Context, dto EmailPasswordRegistratio
 		"active",
 	)
 	if err != nil {
-		return err
+		return core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	if err := uc.userCmdRepo.Create(ctx, userEntity); err != nil {
-		return err
+		return core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	return nil
