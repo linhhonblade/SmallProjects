@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"errors"
+	"github.com/linhhonblade/service-context/core"
 	"social_todo_app_go/common"
 	"social_todo_app_go/module/user/domain"
 	"time"
@@ -28,11 +28,11 @@ func (r *refreshTokenUC) RefreshToken(ctx context.Context, refreshToken string) 
 	//1. Find session by refresh token
 	session, err := r.sessionRepo.FindByRefreshToken(ctx, refreshToken)
 	if err != nil {
-		return nil, err
+		return nil, core.ErrBadRequest.WithDebug(err.Error())
 	}
 	//Check if refresh token is expired
 	if session.RefreshExpAt().Before(time.Now().UTC()) {
-		return nil, errors.New("refresh token is expired")
+		return nil, core.ErrBadRequest.WithError("refresh token is expired")
 	}
 
 	//2. Find user by session user id
@@ -41,14 +41,14 @@ func (r *refreshTokenUC) RefreshToken(ctx context.Context, refreshToken string) 
 		return nil, err
 	}
 	if user.Status() == "banned" {
-		return nil, errors.New("user is banned")
+		return nil, core.ErrBadRequest.WithError("user is banned")
 	}
 	//3. Generate new jwt access token
 	userId := user.Id()
 	sessionId := common.GenUUID()
 	accessToken, err := r.tokenProvider.IssueToken(ctx, sessionId.String(), userId.String())
 	if err != nil {
-		return nil, err
+		return nil, core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	//4. Update session with new access token
@@ -57,7 +57,7 @@ func (r *refreshTokenUC) RefreshToken(ctx context.Context, refreshToken string) 
 	refreshExpAt := time.Now().UTC().Add(time.Second * time.Duration(r.tokenProvider.TokenRefreshInSeconds()))
 	newSession := domain.NewUserSession(sessionId, userId, newRefreshToken, tokenExpAt, refreshExpAt)
 	if err := r.sessionRepo.Create(ctx, newSession); err != nil {
-		return nil, err
+		return nil, core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	//5. Delete old sessions

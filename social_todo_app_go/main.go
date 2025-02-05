@@ -22,11 +22,12 @@ import (
 )
 
 func newService() sctx.ServiceContext {
-	return sctx.NewServiceContext(
+	serviceCtx := sctx.NewServiceContext(
 		sctx.WithName("social_todo_app_go"),
-		sctx.WithComponent(gormc.NewGormDB(common.KeyGormDB, "postgres")),
+		sctx.WithComponent(gormc.NewGormDB(common.KeyGormDB, "app")),
 		sctx.WithComponent(component.NewJWT(common.KeyJWT)),
 	)
+	return serviceCtx
 }
 
 func main() {
