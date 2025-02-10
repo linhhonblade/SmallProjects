@@ -10,6 +10,7 @@ type UseCase interface {
 	Register(ctx context.Context, dto EmailPasswordRegistrationDTO) error
 	LoginEmailPassword(ctx context.Context, dto EmailPasswordLoginDTO) (*TokenResponseDTO, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*TokenResponseDTO, error)
+	ChangeAvt(ctx context.Context, dto SetSingleImageDTO) error
 }
 
 type Hasher interface {
@@ -24,10 +25,15 @@ type TokenProvider interface {
 	TokenRefreshInSeconds() int
 }
 
+type ChangeAvatar interface {
+	ChangeAvt(ctx context.Context, dto SetSingleImageDTO) error
+}
+
 type useCase struct {
 	*registerUC
 	*loginEmailPasswordUC
 	*refreshTokenUC
+	*changeAvtUC
 }
 
 type Builder interface {
@@ -39,6 +45,7 @@ type Builder interface {
 	BuildTokenProvider() TokenProvider
 	BuildSessionRepo() SessionRepository
 	BuildUserRepo() UserRepository
+	BuildAttachmentRepo() AttachmentRepository
 }
 
 func NewUCWithBuilder(b Builder) UseCase {
@@ -46,6 +53,7 @@ func NewUCWithBuilder(b Builder) UseCase {
 		registerUC:           NewRegisterUC(b.BuildUserQueryRepo(), b.BuildUserCmdRepo(), b.BuildHasher()),
 		loginEmailPasswordUC: NewLoginEmailPasswordUC(b.BuildUserQueryRepo(), b.BuildTokenProvider(), b.BuildSessionCmdRepo(), b.BuildHasher()),
 		refreshTokenUC:       NewRefreshTokenUC(b.BuildUserRepo(), b.BuildSessionRepo(), b.BuildTokenProvider(), b.BuildHasher()),
+		changeAvtUC:          NewChangeAvtUC(b.BuildUserQueryRepo(), b.BuildUserCmdRepo(), b.BuildAttachmentRepo()),
 	}
 }
 
@@ -68,6 +76,7 @@ type UserQueryRepository interface {
 
 type UserCommandRepository interface {
 	Create(ctx context.Context, data *domain.User) error
+	Update(ctx context.Context, cond map[string]interface{}, data *domain.UserUpdate) error
 }
 
 type SessionRepository interface {

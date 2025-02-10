@@ -14,11 +14,12 @@ type User struct {
 	salt      string
 	role      Role
 	status    string
+	avatar    string
 }
 
-func NewUser(id uuid.UUID, firstName string, lastName string, email string, password string, salt string, role Role, status string) (*User, error) {
+func NewUser(id uuid.UUID, firstName string, lastName string, email string, password string, salt string, role Role, status string, avatar string) (*User, error) {
 	// TODO: Add validation
-	return &User{id: id, firstName: firstName, lastName: lastName, email: email, password: password, salt: salt, role: role, status: status}, nil
+	return &User{id: id, firstName: firstName, lastName: lastName, email: email, password: password, salt: salt, role: role, status: status, avatar: avatar}, nil
 }
 
 func (u User) Id() uuid.UUID {
@@ -73,4 +74,19 @@ func GetRole(s string) Role {
 	default:
 		return RoleUser
 	}
+}
+func (u User) SetAvatar(avt string) {
+	u.avatar = avt
+}
+
+type UserUpdate struct {
+	avatar string
+}
+
+func (u *UserUpdate) Avatar() string {
+	return u.avatar
+}
+
+func NewUserUpdate(avatar string) *UserUpdate {
+	return &UserUpdate{avatar: avatar}
 }

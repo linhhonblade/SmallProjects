@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"github.com/linhhonblade/service-context/core"
 	"social_todo_app_go/common"
 	"social_todo_app_go/module/user/domain"
 	"time"
@@ -22,12 +23,12 @@ func (uc *loginEmailPasswordUC) LoginEmailPassword(ctx context.Context, dto Emai
 	// 1. Find user by email
 	user, err := uc.userRepo.FindByEmail(ctx, dto.Email)
 	if err != nil {
-		return nil, err
+		return nil, core.ErrBadRequest.WithDebug(err.Error())
 	}
 
 	// 2. Hash and compare password
 	if ok := uc.hasher.CompareHashPassword(user.Password(), user.Salt(), dto.Password); !ok {
-		return nil, domain.InvalidEmailPassword
+		return nil, core.ErrUnauthorized.WithError(domain.InvalidEmailPassword.Error())
 	}
 
 	userId := user.Id()
@@ -36,7 +37,7 @@ func (uc *loginEmailPasswordUC) LoginEmailPassword(ctx context.Context, dto Emai
 	// 3. Generate JWT
 	accessToken, err := uc.tokenProvider.IssueToken(ctx, sessionId.String(), userId.String())
 	if err != nil {
-		return nil, err
+		return nil, core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	// 4. Insert Session into DB
@@ -45,7 +46,7 @@ func (uc *loginEmailPasswordUC) LoginEmailPassword(ctx context.Context, dto Emai
 	refreshExpAt := time.Now().UTC().Add(time.Second * time.Duration(uc.tokenProvider.TokenRefreshInSeconds()))
 	session := domain.NewUserSession(sessionId, userId, refreshToken, tokenExpAt, refreshExpAt)
 	if err := uc.sessionRepo.Create(ctx, session); err != nil {
-		return nil, err
+		return nil, core.ErrInternalServerError.WithDebug(err.Error())
 	}
 
 	// 5.Return token response dto

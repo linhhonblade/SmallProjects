@@ -52,6 +52,7 @@ func (uc *registerUC) Register(ctx context.Context, dto EmailPasswordRegistratio
 		salt,
 		domain.RoleUser,
 		"active",
+		"",
 	)
 	if err != nil {
 		return core.ErrInternalServerError.WithDebug(err.Error())

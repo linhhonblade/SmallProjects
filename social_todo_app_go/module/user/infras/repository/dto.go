@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/google/uuid"
+	"social_todo_app_go/common"
 	"social_todo_app_go/module/user/domain"
 )
 
@@ -14,6 +15,11 @@ type UserDto struct {
 	Salt      string    `gorm:"column:salt;"`
 	Role      string    `gorm:"column:role;"`
 	Status    string    `gorm:"column:status;"`
+	Avatar    *string   `gorm:"column:avatar;"`
+}
+
+type UserUpdateDto struct {
+	Avatar string `gorm:"column:avatar;"`
 }
 
 func (dto *UserDto) ToEntity() (*domain.User, error) {
@@ -26,5 +32,6 @@ func (dto *UserDto) ToEntity() (*domain.User, error) {
 		dto.Salt,
 		domain.GetRole(dto.Role),
 		dto.Status,
+		common.StringFromPointer(dto.Avatar),
 	)
 }

@@ -26,6 +26,7 @@ func newService() sctx.ServiceContext {
 		sctx.WithName("social_todo_app_go"),
 		sctx.WithComponent(gormc.NewGormDB(common.KeyGormDB, "app")),
 		sctx.WithComponent(component.NewJWT(common.KeyJWT)),
+		sctx.WithComponent(component.NewAWSS3Provider(common.KeyAWSS3)),
 	)
 	return serviceCtx
 }
@@ -33,6 +34,7 @@ func newService() sctx.ServiceContext {
 func main() {
 
 	service := newService()
+	service.OutEnv()
 
 	if err := service.Load(); err != nil {
 		log.Fatalln(err)

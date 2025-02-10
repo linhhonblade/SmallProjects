@@ -35,6 +35,16 @@ func (repo userPostgresRepo) Create(ctx context.Context, data *domain.User) erro
 	return nil
 }
 
+func (repo userPostgresRepo) Update(ctx context.Context, cond map[string]interface{}, data *domain.UserUpdate) error {
+	dto := UserUpdateDto{
+		Avatar: data.Avatar(),
+	}
+	if err := repo.db.Table(TbName).Where(cond).Updates(dto).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
 func (repo userPostgresRepo) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var dto UserDto
 	if err := repo.db.Table(TbName).Where("email = ?", email).First(&dto).Error; err != nil {

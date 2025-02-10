@@ -6,6 +6,9 @@ import (
 	"github.com/linhhonblade/service-context/core"
 	"net/http"
 	"social_todo_app_go/common"
+	"social_todo_app_go/component"
+	"social_todo_app_go/middleware"
+	"social_todo_app_go/module/user/infras/repository"
 	"social_todo_app_go/module/user/usecase"
 )
 
@@ -32,7 +35,7 @@ func (s service) handleRegister() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"data": true})
+		c.JSON(http.StatusOK, core.ResponseData(true))
 	}
 }
 
@@ -48,7 +51,7 @@ func (s service) handleLoginEmailPassword() gin.HandlerFunc {
 			common.WriteErrorResponse(c, err)
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"data": resp})
+		c.JSON(http.StatusOK, core.ResponseData(resp))
 	}
 }
 
@@ -67,7 +70,24 @@ func (s service) handleRefreshToken() gin.HandlerFunc {
 			common.WriteErrorResponse(c, err)
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"data": data})
+		c.JSON(http.StatusOK, core.ResponseData(data))
+	}
+}
+
+func (s service) handleChangeAvatar() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		dto := usecase.SetSingleImageDTO{}
+		if err := c.BindJSON(&dto); err != nil {
+			common.WriteErrorResponse(c, core.ErrBadRequest.WithDebug(err.Error()))
+			return
+		}
+		requester := c.MustGet(common.KeyRequester).(common.Requester)
+		dto.Requester = requester
+		if err := s.uc.ChangeAvt(c.Request.Context(), dto); err != nil {
+			common.WriteErrorResponse(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, core.ResponseData(true))
 	}
 }
 
@@ -75,4 +95,9 @@ func (s service) Routes(g *gin.RouterGroup) {
 	g.POST("/register", s.handleRegister())
 	g.POST("/auth/login", s.handleLoginEmailPassword())
 	g.POST("/auth/refresh-token", s.handleRefreshToken())
+
+	db := s.sctx.MustGet(common.KeyGormDB).(common.DBContext).GetDB()
+	tokenProvider := s.sctx.MustGet(common.KeyJWT).(component.TokenProvider)
+	authClient := usecase.NewIntrospectUC(repository.NewUserRepo(db), repository.NewUserSessionPostgresRepo(db), tokenProvider)
+	g.POST("/user/change-avatar", middleware.RequireAuth(authClient), s.handleChangeAvatar())
 }
