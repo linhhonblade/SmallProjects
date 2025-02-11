@@ -35,10 +35,17 @@ func (repo userPostgresRepo) Create(ctx context.Context, data *domain.User) erro
 	return nil
 }
 
-func (repo userPostgresRepo) Update(ctx context.Context, cond map[string]interface{}, data *domain.UserUpdate) error {
-	dto := UserUpdateDto{
-		Avatar: data.Avatar(),
-	}
+func (repo userPostgresRepo) Update(ctx context.Context, cond map[string]interface{}, data *domain.User) error {
+	dto := UserDto{
+		Id:        data.Id(),
+		FirstName: data.FirstName(),
+		LastName:  data.LastName(),
+		Email:     data.Email(),
+		Password:  data.Password(),
+		Salt:      data.Salt(),
+		Role:      data.Status(),
+		Status:    data.Status(),
+		Avatar:    common.GetPointerString(data.Avatar())}
 	if err := repo.db.Table(TbName).Where(cond).Updates(dto).Error; err != nil {
 		return err
 	}

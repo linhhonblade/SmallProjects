@@ -6,3 +6,7 @@ func StringFromPointer(ptr *string) string {
 	}
 	return *ptr
 }
+
+func GetPointerString(s string) *string {
+	return &s
+}

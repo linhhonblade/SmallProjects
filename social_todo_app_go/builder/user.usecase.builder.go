@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"social_todo_app_go/common"
-	"social_todo_app_go/module/attachment"
 	"social_todo_app_go/module/user/domain"
 	"social_todo_app_go/module/user/infras/repository"
 	"social_todo_app_go/module/user/usecase"
@@ -50,10 +49,6 @@ func (s simpleBuilder) BuildSessionRepo() usecase.SessionRepository {
 
 func (s simpleBuilder) BuildUserRepo() usecase.UserRepository {
 	return repository.NewUserRepo(s.db)
-}
-
-func (s simpleBuilder) BuildAttachmentRepo() usecase.AttachmentRepository {
-	return attachment.NewRepo(s.db)
 }
 
 type complexBuilder struct {

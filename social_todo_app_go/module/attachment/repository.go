@@ -24,23 +24,28 @@ func (r repo) Create(ctx context.Context, att *Attachment) error {
 }
 
 func (r repo) Find(ctx context.Context, id uuid.UUID) (*common.Attachment, error) {
-	attachment := common.Attachment{}
+	var attachment Attachment
 	if err := r.db.Table(TbName).Where("id = ?", id.String()).First(&attachment).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, common.ErrRecordNotFound
 		}
 		return nil, errors.WithStack(err)
 	}
-	return &attachment, nil
+	return &common.Attachment{
+		Id:              attachment.Id,
+		Title:           attachment.Title,
+		FileName:        attachment.FileName,
+		FileUrl:         attachment.FileUrl,
+		FileSize:        attachment.FileSize,
+		FileType:        attachment.FileType,
+		StorageProvider: attachment.StorageProvider,
+		Status:          attachment.Status}, nil
+
 }
 
 func (r repo) SetAttachmentStatusActive(ctx context.Context, id uuid.UUID) error {
-	_, err := r.Find(ctx, id)
-	if err != nil {
-		return common.ErrRecordNotFound
-	}
 	if err := r.db.Table(TbName).Where("id = ?", id.String()).Update("status", "active").Error; err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	return nil
 }

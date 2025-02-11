@@ -19,22 +19,28 @@ func NewChangeAvtUC(userQueryRepo UserQueryRepository, userCmdRepo UserCommandRe
 }
 
 func (uc *changeAvtUC) ChangeAvt(ctx context.Context, dto SetSingleImageDTO) error {
+	//0. Find User
+	userEntity, err := uc.userQueryRepo.FindByID(ctx, dto.Requester.UserId())
+	if err != nil {
+		return core.ErrBadRequest.WithError(domain.ErrCannotChangeAvatar.Error()).WithDebug(err.Error())
+	}
 	//1. Find Image to make sure it exist in database
 	im, err := uc.attachmentRepo.Find(ctx, dto.ImageId)
 	if err != nil {
-		return core.ErrBadRequest.WithError(err.Error())
+		return core.ErrBadRequest.WithError(domain.ErrCannotChangeAvatar.Error()).WithDebug(err.Error())
 	}
-
-	//2. Set avatar for user
-	userId := dto.Requester.UserId()
-	if err = uc.userCmdRepo.Update(ctx, map[string]interface{}{"id": userId.String()}, domain.NewUserUpdate(im.Id.String())); err != nil {
-		return core.ErrInternalServerError.WithDebug(err.Error())
+	if err := userEntity.SetAvatar(im.FileName); err != nil {
+		return core.ErrBadRequest.WithError(domain.ErrCannotChangeAvatar.Error()).WithDebug(err.Error())
+	}
+	if err := uc.userCmdRepo.Update(ctx, map[string]interface{}{"id": userEntity.Id().String()}, userEntity); err != nil {
+		return core.ErrBadRequest.WithError(domain.ErrCannotChangeAvatar.Error()).WithDebug(err.Error())
 	}
 
 	//3. Update attachment status to active
-	if err = uc.attachmentRepo.SetAttachmentStatusActive(ctx, dto.ImageId); err != nil {
-		return core.ErrInternalServerError.WithDebug(err.Error())
-	}
+	go func() {
+		defer common.Recover()
+		_ = uc.attachmentRepo.SetAttachmentStatusActive(ctx, dto.ImageId)
+	}()
 	return nil
 }
 

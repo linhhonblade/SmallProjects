@@ -22,37 +22,39 @@ func NewUser(id uuid.UUID, firstName string, lastName string, email string, pass
 	return &User{id: id, firstName: firstName, lastName: lastName, email: email, password: password, salt: salt, role: role, status: status, avatar: avatar}, nil
 }
 
-func (u User) Id() uuid.UUID {
+func (u *User) Id() uuid.UUID {
 	return u.id
 }
 
-func (u User) FirstName() string {
+func (u *User) FirstName() string {
 	return u.firstName
 }
 
-func (u User) LastName() string {
+func (u *User) LastName() string {
 	return u.lastName
 }
 
-func (u User) Email() string {
+func (u *User) Email() string {
 	return u.email
 }
 
-func (u User) Password() string {
+func (u *User) Password() string {
 	return u.password
 }
 
-func (u User) Salt() string {
+func (u *User) Salt() string {
 	return u.salt
 }
 
-func (u User) Role() Role {
+func (u *User) Role() Role {
 	return u.role
 }
 
-func (u User) Status() string {
+func (u *User) Status() string {
 	return u.status
 }
+
+func (u *User) Avatar() string { return u.avatar }
 
 type Role int
 
@@ -75,18 +77,8 @@ func GetRole(s string) Role {
 		return RoleUser
 	}
 }
-func (u User) SetAvatar(avt string) {
+func (u *User) SetAvatar(avt string) error {
+	// implement logic to change avatar
 	u.avatar = avt
-}
-
-type UserUpdate struct {
-	avatar string
-}
-
-func (u *UserUpdate) Avatar() string {
-	return u.avatar
-}
-
-func NewUserUpdate(avatar string) *UserUpdate {
-	return &UserUpdate{avatar: avatar}
+	return nil
 }

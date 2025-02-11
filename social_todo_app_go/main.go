@@ -77,7 +77,7 @@ func main() {
 		//userUC := usecase.NewUseCase(repository.NewUserRepo(db), &common.Hasher{}, tokenProvider, repository.NewUserSessionPostgresRepo(db))
 		//userUC := usecase.NewUCWithBuilder(builder.NewSimpleBuilder(db, tokenProvider))
 		userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
-		httpservice.NewUserService(userUC, service).Routes(v1)
+		httpservice.NewUserService(userUC, service).SetAuthClient(authClient).Routes(v1)
 	}
 
 	r.GET("/ping", middleware.RequireAuth(authClient), func(c *gin.Context) {
