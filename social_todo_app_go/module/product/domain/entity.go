@@ -11,6 +11,7 @@ var (
 
 const (
 	EntityName = "Product"
+	TbName     = "product"
 )
 
 type Product struct {

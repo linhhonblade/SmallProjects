@@ -13,6 +13,7 @@ import (
 	gincategory "social_todo_app_go/module/category/transport/gin"
 	"social_todo_app_go/module/product/controller"
 	productusecase "social_todo_app_go/module/product/domain/usecase"
+	productservice "social_todo_app_go/module/product/infras/httpservice"
 	productpostgres "social_todo_app_go/module/product/repository/postgres"
 	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
@@ -67,7 +68,7 @@ func main() {
 		}
 		products := v1.Group("/products")
 		{
-			products.GET("", ginproduct.ListProduct(db))
+			//products.GET("", ginproduct.ListProduct(db))
 			products.GET("/:id", ginproduct.GetProductById(db))
 			products.POST("", api.CreateProductAPI(db))
 			products.PATCH("/:id", ginproduct.UpdateProductById(db))
@@ -79,6 +80,7 @@ func main() {
 		userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
 		httpservice.NewUserService(userUC, service).SetAuthClient(authClient).Routes(v1)
 	}
+	productservice.NewHttpService(service).Routes(v1)
 
 	r.GET("/ping", middleware.RequireAuth(authClient), func(c *gin.Context) {
 		requester := c.MustGet(common.KeyRequester).(common.Requester) // cast from any to Requester
