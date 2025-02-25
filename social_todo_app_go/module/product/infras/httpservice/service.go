@@ -4,13 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 	sctx "github.com/linhhonblade/service-context"
 	"github.com/linhhonblade/service-context/core"
+	"google.golang.org/grpc"
 	"net/http"
 	"social_todo_app_go/common"
 	"social_todo_app_go/module/product/query"
+	"social_todo_app_go/module/product/repository/grpcclient"
+	"social_todo_app_go/proto/category"
 )
 
 type httpService struct {
-	sctx sctx.ServiceContext
+	sctx                sctx.ServiceContext
+	grpcCategClientConn grpc.ClientConnInterface
 }
 
 func NewHttpService(sctx sctx.ServiceContext) *httpService {
@@ -24,14 +28,21 @@ func (s *httpService) handleListProduct() gin.HandlerFunc {
 			common.WriteErrorResponse(c, core.ErrBadRequest.WithDebug(err.Error()))
 			return
 		}
-		result, err := query.NewListProductQuery(s.sctx).Execute(c.Request.Context(), &param)
+
+		categRepo := grpcclient.NewCategGRPCClient(category.NewCategoryClient(s.grpcCategClientConn))
+		result, err := query.NewListProductQuery(s.sctx, categRepo).Execute(c.Request.Context(), &param)
 		if err != nil {
 			common.WriteErrorResponse(c, err)
+			return
 		}
 		c.JSON(http.StatusOK, core.SuccessResponse(result, param.Paging, param.ListProductFilter))
 	}
 }
-func (s httpService) Routes(g *gin.RouterGroup) {
+func (s *httpService) Routes(g *gin.RouterGroup) {
 	products := g.Group("/products")
 	products.GET("/", s.handleListProduct())
+}
+
+func (s *httpService) SetGRPCCategClientConn(cc grpc.ClientConnInterface) {
+	s.grpcCategClientConn = cc
 }

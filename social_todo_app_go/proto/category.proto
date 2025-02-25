@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package protorpc;
+
+option go_package = "category/";
+
+service Category {
+  rpc GetCategoryById (GetCategoryByIdRequest) returns (GetCategoryByIdResponse);
+}
+
+message GetCategoryByIdRequest {
+  repeated string ids = 1;
+}
+
+message GetCategoryByIdResponse {
+  repeated CategoryDTO data = 1;
+}
+
+message CategoryDTO {
+  string id = 1;
+  string name = 2;
+}
