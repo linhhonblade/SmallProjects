@@ -8,6 +8,10 @@ const (
 	KeyJWT       = "jwt"
 	KeyAWSS3     = "aws_s3"
 	KeyConfig    = "config"
+	KeyNATS      = "nats"
+	KeyLocalPS   = "local_ps"
+
+	TopicUserAvtChanged = "user.avatar.changed"
 )
 
 type DBContext interface {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/linhhonblade/service-context/core"
+	log "github.com/sirupsen/logrus"
 	"social_todo_app_go/common"
+	"social_todo_app_go/common/pubsub"
 	"social_todo_app_go/module/user/domain"
 )
 
@@ -39,7 +41,13 @@ func (uc *changeAvtUC) ChangeAvt(ctx context.Context, dto SetSingleImageDTO) err
 	//3. Update attachment status to active
 	go func() {
 		defer common.Recover()
-		_ = uc.attachmentRepo.SetAttachmentStatusActive(ctx, dto.ImageId)
+		ps := ctx.Value("pubsub").(pubsub.PubSub)
+		if err := ps.Publish(ctx, common.TopicUserAvtChanged, pubsub.NewMessage(map[string]interface{}{
+			"user_id": dto.Requester.UserId().String(),
+			"img_id":  dto.ImageId.String(),
+		})); err != nil {
+			log.Println(err)
+		}
 	}()
 	return nil
 }

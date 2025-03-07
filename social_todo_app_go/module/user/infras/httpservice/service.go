@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	sctx "github.com/linhhonblade/service-context"
 	"github.com/linhhonblade/service-context/core"
+	"golang.org/x/net/context"
 	"net/http"
 	"social_todo_app_go/common"
 	"social_todo_app_go/middleware"
@@ -88,9 +89,10 @@ func (s service) handleChangeAvatar() gin.HandlerFunc {
 		dbCtx := s.sctx.MustGet(common.KeyGormDB).(common.DBContext)
 		userRepo := repository.NewUserRepo(dbCtx.GetDB())
 		attachmentRepo := attachment.NewRepo(dbCtx.GetDB())
+		ctxWithPubSub := context.WithValue(c.Request.Context(), "pubsub", s.sctx.MustGet(common.KeyLocalPS))
 		changeAvtUC := usecase.NewChangeAvtUC(userRepo, userRepo, attachmentRepo)
 
-		if err := changeAvtUC.ChangeAvt(c.Request.Context(), dto); err != nil {
+		if err := changeAvtUC.ChangeAvt(ctxWithPubSub, dto); err != nil {
 			common.WriteErrorResponse(c, err)
 			return
 		}
