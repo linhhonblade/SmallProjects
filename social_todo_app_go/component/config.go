@@ -36,7 +36,7 @@ func (c *config) InitFlags() {
 	flag.StringVar(
 		&c.urlGRPCCategoryServer,
 		"grpc-category-url",
-		"http://localhost:8000",
+		":8000",
 		"URL of category gRPC",
 	)
 }

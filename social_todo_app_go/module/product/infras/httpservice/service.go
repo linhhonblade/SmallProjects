@@ -38,9 +38,28 @@ func (s *httpService) handleListProduct() gin.HandlerFunc {
 		c.JSON(http.StatusOK, core.SuccessResponse(result, param.Paging, param.ListProductFilter))
 	}
 }
+
+func (s *httpService) handleCreateProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var data query.ProductDTO
+		if err := c.Bind(&data); err != nil {
+			common.WriteErrorResponse(c, core.ErrBadRequest.WithDebug(err.Error()))
+			return
+		}
+
+		result, err := query.NewCreateOneProductQuery(s.sctx).Execute(c.Request.Context(), &data)
+		if err != nil {
+			common.WriteErrorResponse(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, core.ResponseData(result.Id))
+	}
+}
+
 func (s *httpService) Routes(g *gin.RouterGroup) {
 	products := g.Group("/products")
 	products.GET("/", s.handleListProduct())
+	products.POST("/", s.handleCreateProduct())
 }
 
 func (s *httpService) SetGRPCCategClientConn(cc grpc.ClientConnInterface) {

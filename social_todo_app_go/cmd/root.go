@@ -19,7 +19,6 @@ import (
 	"social_todo_app_go/middleware"
 	"social_todo_app_go/module/category/infra/grpcservice"
 	productservice "social_todo_app_go/module/product/infras/httpservice"
-	ginproduct "social_todo_app_go/module/product/transport/gin"
 	"social_todo_app_go/module/upload"
 	"social_todo_app_go/module/user/infras/httpservice"
 	"social_todo_app_go/module/user/infras/repository"
@@ -52,6 +51,7 @@ var rootCmd = &cobra.Command{
 		/////////////////////////////////////////////
 
 		r := gin.Default()
+		r.Use(middleware.AllowCors())
 		tokenProvider := service.MustGet(common.KeyJWT).(component.TokenProvider)
 
 		r.Use(middleware.Recovery())
@@ -61,26 +61,13 @@ var rootCmd = &cobra.Command{
 		v1 := r.Group("/v1")
 		{
 			v1.PUT("/upload", upload.Upload(db))
-			products := v1.Group("/products")
-			{
-				//products.GET("", ginproduct.ListProduct(db))
-				products.GET("/:id", ginproduct.GetProductById(db))
-				products.PATCH("/:id", ginproduct.UpdateProductById(db))
-				products.DELETE("/:id", ginproduct.DeleteProductById(db))
-			}
-
-			//userUC := usecase.NewUseCase(repository.NewUserRepo(db), &common.Hasher{}, tokenProvider, repository.NewUserSessionPostgresRepo(db))
-			//userUC := usecase.NewUCWithBuilder(builder.NewSimpleBuilder(db, tokenProvider))
 			userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
 			httpservice.NewUserService(userUC, service).SetAuthClient(authClient).Routes(v1)
 		}
 
-		r.GET("/ping", middleware.RequireAuth(authClient), func(c *gin.Context) {
-			requester := c.MustGet(common.KeyRequester).(common.Requester) // cast from any to Requester
-
+		r.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
-				"message":      "pong",
-				"requester_id": requester.UserId(),
+				"message": "pong",
 			})
 		})
 
@@ -94,6 +81,7 @@ var rootCmd = &cobra.Command{
 			c.JSON(http.StatusOK, gin.H{"data": true})
 		})
 
+		// Run gRPC category server
 		go func() {
 			_ = grpcservice.NewCategoryGRPCService(service.MustGet(common.KeyConfig).(interface{ GetPortGRPCCategory() int }).GetPortGRPCCategory(), service).Start()
 		}()
