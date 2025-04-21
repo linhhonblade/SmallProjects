@@ -7,6 +7,8 @@ import (
 	"github.com/linhhonblade/service-context/component/gormc"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
@@ -16,8 +18,10 @@ import (
 	"social_todo_app_go/common"
 	"social_todo_app_go/common/pubsub"
 	"social_todo_app_go/component"
+	_ "social_todo_app_go/docs"
 	"social_todo_app_go/middleware"
-	"social_todo_app_go/module/category/infra/grpcservice"
+	"social_todo_app_go/module/category/infras/grpcservice"
+	categoryservice "social_todo_app_go/module/category/infras/httpservice"
 	productservice "social_todo_app_go/module/product/infras/httpservice"
 	"social_todo_app_go/module/upload"
 	"social_todo_app_go/module/user/infras/httpservice"
@@ -25,6 +29,12 @@ import (
 	"social_todo_app_go/module/user/usecase"
 	consumer2 "social_todo_app_go/sub"
 )
+
+// @title G11 Golang Course API
+// @version 1.0
+// @description API demo dùng Gin + Swagger
+// @host localhost:3000
+// @BasePath /v1
 
 func newService() sctx.ServiceContext {
 	return sctx.NewServiceContext(
@@ -51,6 +61,8 @@ var rootCmd = &cobra.Command{
 		/////////////////////////////////////////////
 
 		r := gin.Default()
+		// Thêm route Swagger
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		r.Use(middleware.AllowCors())
 		tokenProvider := service.MustGet(common.KeyJWT).(component.TokenProvider)
 
@@ -60,7 +72,17 @@ var rootCmd = &cobra.Command{
 
 		v1 := r.Group("/v1")
 		{
+			// @Summary Upload file
+			// @Description Upload a file to the server
+			// @Tags upload
+			// @Accept multipart/form-data
+			// @Produce json
+			// @Param file formData file true "File to upload"
+			// @Success 200 {object} map[string]interface{}
+			// @Failure 400 {object} map[string]string
+			// @Router /v1/upload [put]
 			v1.PUT("/upload", upload.Upload(db))
+
 			userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
 			httpservice.NewUserService(userUC, service).SetAuthClient(authClient).Routes(v1)
 		}
@@ -97,6 +119,9 @@ var rootCmd = &cobra.Command{
 		productService.SetGRPCCategClientConn(cc)
 		productService.Routes(v1)
 
+		categoryService := categoryservice.NewHttpService(service)
+		categoryService.Routes(v1)
+
 		go consumer2.NewTopicUserChangeAvt(service, service.MustGet(common.KeyLocalPS).(pubsub.PubSub)).Start()
 
 		if err := r.Run(":3000"); err != nil {
@@ -110,6 +135,8 @@ func Execute() {
 	consumerCmd := &cobra.Command{Use: "consumer", Short: "Start consumer"}
 	consumerCmd.AddCommand(consumer.SetImgActiveAfterChangeAvtCmd)
 	rootCmd.AddCommand(consumerCmd)
+
+	rootCmd.AddCommand(loadTestCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

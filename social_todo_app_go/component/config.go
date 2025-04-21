@@ -6,10 +6,11 @@ import (
 )
 
 type config struct {
-	id                    string
-	urlRPCCategory        string
-	portGRPCCategory      int
-	urlGRPCCategoryServer string
+	id                        string
+	urlRPCCategory            string
+	portGRPCCategory          int
+	urlGRPCCategoryServer     string
+	defaultDraftOrderDuration float64
 }
 
 func NewConfig(id string) *config {
@@ -38,6 +39,12 @@ func (c *config) InitFlags() {
 		"grpc-category-url",
 		":8000",
 		"URL of category gRPC",
+	)
+	flag.Float64Var(
+		&c.defaultDraftOrderDuration,
+		"default-draft-order-duration",
+		1,
+		"Default draft order duration (in hour)",
 	)
 }
 

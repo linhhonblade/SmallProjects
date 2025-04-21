@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+// Upload godoc
+// @Summary Upload file
+// @Description Upload a file to the server
+// @Tags upload
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "File to upload"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /v1/upload [put]
 func Upload(db *gorm.DB) func(ctx *gin.Context) {
 	return func(c *gin.Context) {
 		fileHeader, err := c.FormFile("file")

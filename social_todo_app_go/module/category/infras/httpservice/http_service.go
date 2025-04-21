@@ -35,11 +35,31 @@ func (s *httpService) handleRpcListCategory() gin.HandlerFunc {
 		c.JSON(http.StatusOK, core.ResponseData(result))
 	}
 }
+
+func (s *httpService) handleListCategory() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var param query.ListCategoryParam
+		if err := c.Bind(&param); err != nil {
+			common.WriteErrorResponse(c, core.ErrBadRequest.WithDebug(err.Error()))
+			return
+		}
+		result, err := query.NewListCategoryQuery(s.sctx).Execute(c.Request.Context(), &param)
+		if err != nil {
+			common.WriteErrorResponse(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, core.SuccessResponse(result, param.Paging, param.ListCategoryFilter))
+	}
+}
+
 func (s httpService) Routes(g *gin.RouterGroup) {
 	category := g.Group("/category")
 	rpc := category.Group("/rpc")
 	{
 		rpc.GET("/query-category-by-id", s.handleRpcListCategory())
+	}
+	{
+		category.GET("/", s.handleListCategory())
 	}
 
 }

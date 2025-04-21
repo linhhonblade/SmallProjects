@@ -1,0 +1,37 @@
+basePath: /v1
+host: localhost:3000
+info:
+  contact: {}
+  description: API demo dùng Gin + Swagger
+  title: G11 Golang Course API
+  version: "1.0"
+paths:
+  /v1/upload:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to the server
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload file
+      tags:
+      - upload
+swagger: "2.0"
