@@ -7,15 +7,6 @@ import (
 	"social_todo_app_go/common"
 )
 
-type CategoryDTO struct {
-	Id   string `gorm:"column:id;" json:"id"`
-	Name string `gorm:"column:name;" json:"name"`
-}
-
-func (CategoryDTO) TableName() string {
-	return "category"
-}
-
 type categoryByIdQuery struct {
 	sctx sctx.ServiceContext
 }

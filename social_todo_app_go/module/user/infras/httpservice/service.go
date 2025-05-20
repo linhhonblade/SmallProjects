@@ -23,6 +23,16 @@ func NewUserService(uc usecase.UseCase, sctx sctx.ServiceContext) service {
 	return service{uc: uc, sctx: sctx}
 }
 
+// handleRegister handles POST /register
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param data body usecase.EmailPasswordRegistrationDTO true "Registration data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /v1/user/register [post]
 func (s service) handleRegister() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var dto usecase.EmailPasswordRegistrationDTO
@@ -41,6 +51,16 @@ func (s service) handleRegister() gin.HandlerFunc {
 	}
 }
 
+// handleLoginEmailPassword handles POST /auth/login
+// @Summary Login with email and password
+// @Description Login and receive authentication tokens
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param data body usecase.EmailPasswordLoginDTO true "Login data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /v1/user/auth/login [post]
 func (s service) handleLoginEmailPassword() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var dto usecase.EmailPasswordLoginDTO
@@ -57,6 +77,16 @@ func (s service) handleLoginEmailPassword() gin.HandlerFunc {
 	}
 }
 
+// handleRefreshToken handles POST /auth/refresh-token
+// @Summary Refresh authentication token
+// @Description Refresh access token using a refresh token
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param data body object{refresh_token=string} true "Refresh token"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /v1/user/auth/refresh-token [post]
 func (s service) handleRefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var bodyData struct {
@@ -76,6 +106,17 @@ func (s service) handleRefreshToken() gin.HandlerFunc {
 	}
 }
 
+// handleChangeAvatar handles PATCH /profile/change-avatar
+// @Summary Change user avatar
+// @Description Change the avatar of the authenticated user
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param data body usecase.SetSingleImageDTO true "Avatar data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Security ApiKeyAuth
+// @Router /v1/user/profile/change-avatar [patch]
 func (s service) handleChangeAvatar() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		dto := usecase.SetSingleImageDTO{}

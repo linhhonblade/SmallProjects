@@ -22,6 +22,7 @@ import (
 	"social_todo_app_go/middleware"
 	"social_todo_app_go/module/category/infras/grpcservice"
 	categoryservice "social_todo_app_go/module/category/infras/httpservice"
+	orderservice "social_todo_app_go/module/order/infras/httpservice"
 	productservice "social_todo_app_go/module/product/infras/httpservice"
 	"social_todo_app_go/module/upload"
 	"social_todo_app_go/module/user/infras/httpservice"
@@ -34,6 +35,9 @@ import (
 // @version 1.0
 // @description API demo dùng Gin + Swagger
 // @host localhost:3000
+// @SecurityDefinitions.apiKey Bearer
+// @in header
+// @name Authorization
 // @BasePath /v1
 
 func newService() sctx.ServiceContext {
@@ -63,7 +67,7 @@ var rootCmd = &cobra.Command{
 		r := gin.Default()
 		// Thêm route Swagger
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-		r.Use(middleware.AllowCors())
+		//r.Use(middleware.AllowCors())
 		tokenProvider := service.MustGet(common.KeyJWT).(component.TokenProvider)
 
 		r.Use(middleware.Recovery())
@@ -87,12 +91,14 @@ var rootCmd = &cobra.Command{
 			httpservice.NewUserService(userUC, service).SetAuthClient(authClient).Routes(v1)
 		}
 
+		// Health check service
 		r.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"message": "pong",
 			})
 		})
 
+		// Revoke token
 		r.DELETE("/v1/revoke-token", middleware.RequireAuth(authClient), func(c *gin.Context) {
 			repo := repository.NewUserSessionPostgresRepo(db)
 			requester := c.MustGet(common.KeyRequester).(common.Requester) // cast from any to Requester
@@ -107,7 +113,6 @@ var rootCmd = &cobra.Command{
 		go func() {
 			_ = grpcservice.NewCategoryGRPCService(service.MustGet(common.KeyConfig).(interface{ GetPortGRPCCategory() int }).GetPortGRPCCategory(), service).Start()
 		}()
-
 		opts := grpc.WithTransportCredentials(insecure.NewCredentials())
 		grpcCategServerUrl := service.MustGet(common.KeyConfig).(interface{ GetUrlGRPCCategoryServer() string }).GetUrlGRPCCategoryServer()
 		cc, err := grpc.NewClient(grpcCategServerUrl, opts)
@@ -115,15 +120,23 @@ var rootCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		// Product http service
 		productService := productservice.NewHttpService(service)
 		productService.SetGRPCCategClientConn(cc)
 		productService.Routes(v1)
 
+		// Product category http service
 		categoryService := categoryservice.NewHttpService(service)
 		categoryService.Routes(v1)
 
+		// Order http service
+		orderService := orderservice.NewHttpService(service).SetAuthClient(authClient)
+		orderService.Routes(v1)
+
+		// consumer pub sub
 		go consumer2.NewTopicUserChangeAvt(service, service.MustGet(common.KeyLocalPS).(pubsub.PubSub)).Start()
 
+		// Start http service
 		if err := r.Run(":3000"); err != nil {
 			log.Fatalln(err)
 		}

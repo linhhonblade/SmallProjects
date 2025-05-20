@@ -21,6 +21,18 @@ func NewHttpService(sctx sctx.ServiceContext) *httpService {
 	return &httpService{sctx: sctx}
 }
 
+// handleListProduct handles GET /products
+// @Summary Get Product List
+// @Description Get list of products with optional filters and pagination
+// @Tags product
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Param name query string false "Product name filter"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /v1/products [get]
 func (s *httpService) handleListProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var param query.ListProductParam
@@ -39,6 +51,16 @@ func (s *httpService) handleListProduct() gin.HandlerFunc {
 	}
 }
 
+// handleCreateProduct handles POST /products
+// @Summary Create a new product
+// @Description Create a new product with the provided data
+// @Tags product
+// @Accept json
+// @Produce json
+// @Param data body query.ProductDTO true "Product data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /v1/products [post]
 func (s *httpService) handleCreateProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var data query.ProductDTO
