@@ -21,3 +21,6 @@ type CategoryDTO struct {
 func (CategoryDTO) TableName() string {
 	return "category"
 }
+func (ProductDTO) TableName() string {
+	return "product"
+}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package protorpc;
+
+option go_package = "product/";
+
+service Product {
+  rpc GetProductById (GetProductByIdRequest) returns (GetProductByIdResponse);
+}
+
+message GetProductByIdRequest {
+  repeated string ids = 1;
+}
+
+message GetProductByIdResponse {
+  repeated ProductDTO data = 1;
+}
+
+message ProductDTO {
+  string id = 1;
+  string name = 2;
+}

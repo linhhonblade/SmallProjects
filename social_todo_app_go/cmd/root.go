@@ -20,9 +20,10 @@ import (
 	"social_todo_app_go/component"
 	_ "social_todo_app_go/docs"
 	"social_todo_app_go/middleware"
-	"social_todo_app_go/module/category/infras/grpcservice"
+	categoryGRPC "social_todo_app_go/module/category/infras/grpcservice"
 	categoryservice "social_todo_app_go/module/category/infras/httpservice"
 	orderservice "social_todo_app_go/module/order/infras/httpservice"
+	productGRPC "social_todo_app_go/module/product/infras/grpcservice"
 	productservice "social_todo_app_go/module/product/infras/httpservice"
 	"social_todo_app_go/module/upload"
 	"social_todo_app_go/module/user/infras/httpservice"
@@ -111,8 +112,9 @@ var rootCmd = &cobra.Command{
 
 		// Run gRPC category server
 		go func() {
-			_ = grpcservice.NewCategoryGRPCService(service.MustGet(common.KeyConfig).(interface{ GetPortGRPCCategory() int }).GetPortGRPCCategory(), service).Start()
+			_ = categoryGRPC.NewCategoryGRPCService(service.MustGet(common.KeyConfig).(interface{ GetPortGRPCCategory() int }).GetPortGRPCCategory(), service).Start()
 		}()
+		// Run gRPC category client
 		opts := grpc.WithTransportCredentials(insecure.NewCredentials())
 		grpcCategServerUrl := service.MustGet(common.KeyConfig).(interface{ GetUrlGRPCCategoryServer() string }).GetUrlGRPCCategoryServer()
 		cc, err := grpc.NewClient(grpcCategServerUrl, opts)
@@ -125,12 +127,24 @@ var rootCmd = &cobra.Command{
 		productService.SetGRPCCategClientConn(cc)
 		productService.Routes(v1)
 
+		// Product grpc server
+		go func() {
+			_ = productGRPC.NewProductGRPCService(service.MustGet(common.KeyConfig).(interface{ GetPortGRPCProduct() int }).GetPortGRPCProduct(), service).Start()
+		}()
+		// Run gRPC product client
+		grpcProductServerUrl := service.MustGet(common.KeyConfig).(interface{ GetUrlGRPCProductServer() string }).GetUrlGRPCProductServer()
+		productCc, err := grpc.NewClient(grpcProductServerUrl, opts)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		// Product category http service
 		categoryService := categoryservice.NewHttpService(service)
 		categoryService.Routes(v1)
 
 		// Order http service
 		orderService := orderservice.NewHttpService(service).SetAuthClient(authClient)
+		orderService.SetGRPCCategClientConn(productCc)
 		orderService.Routes(v1)
 
 		// consumer pub sub

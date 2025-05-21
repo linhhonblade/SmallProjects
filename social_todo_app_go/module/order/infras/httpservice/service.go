@@ -5,15 +5,19 @@ import (
 	"github.com/google/uuid"
 	sctx "github.com/linhhonblade/service-context"
 	"github.com/linhhonblade/service-context/core"
+	"google.golang.org/grpc"
 	"net/http"
 	"social_todo_app_go/common"
 	"social_todo_app_go/middleware"
 	"social_todo_app_go/module/order/query"
+	"social_todo_app_go/module/order/repository/grpcclient"
+	"social_todo_app_go/proto/product"
 )
 
 type httpService struct {
-	sctx       sctx.ServiceContext
-	authClient middleware.AuthClient
+	sctx                  sctx.ServiceContext
+	authClient            middleware.AuthClient
+	grpcProductClientConn grpc.ClientConnInterface
 }
 
 func NewHttpService(sctx sctx.ServiceContext) *httpService {
@@ -102,7 +106,8 @@ func (s *httpService) handleListOrder() gin.HandlerFunc {
 			return
 		}
 		requester := c.MustGet(common.KeyRequester).(common.Requester)
-		result, err := query.NewListOrderQuery(s.sctx, requester).Execute(c.Request.Context(), &param)
+		productRepo := grpcclient.NewProductGRPCClient(product.NewProductClient(s.grpcProductClientConn))
+		result, err := query.NewListOrderQuery(s.sctx, requester, productRepo).Execute(c.Request.Context(), &param)
 		if err != nil {
 			common.WriteErrorResponse(c, err)
 			return
@@ -121,4 +126,8 @@ func (s *httpService) Routes(g *gin.RouterGroup) {
 func (s *httpService) SetAuthClient(ac middleware.AuthClient) *httpService {
 	s.authClient = ac
 	return s
+}
+
+func (s *httpService) SetGRPCCategClientConn(conn grpc.ClientConnInterface) {
+	s.grpcProductClientConn = conn
 }

@@ -11,6 +11,8 @@ type config struct {
 	portGRPCCategory          int
 	urlGRPCCategoryServer     string
 	defaultDraftOrderDuration float64
+	portGRPCProduct           int
+	urlGRPCProductServer      string
 }
 
 func NewConfig(id string) *config {
@@ -46,6 +48,16 @@ func (c *config) InitFlags() {
 		1,
 		"Default draft order duration (in hour)",
 	)
+	flag.IntVar(
+		&c.portGRPCProduct,
+		"grpc-product-port",
+		8001,
+		"Port of product gRPC")
+	flag.StringVar(
+		&c.urlGRPCProductServer,
+		"grpc-product-url",
+		":8001",
+		"URL of product gRPC")
 }
 
 func (c *config) Activate(context sctx.ServiceContext) error {
@@ -66,4 +78,12 @@ func (c config) GetPortGRPCCategory() int {
 
 func (c config) GetUrlGRPCCategoryServer() string {
 	return c.urlGRPCCategoryServer
+}
+
+func (c config) GetPortGRPCProduct() int {
+	return c.portGRPCProduct
+}
+
+func (c config) GetUrlGRPCProductServer() string {
+	return c.urlGRPCProductServer
 }
