@@ -75,7 +75,8 @@ func (s *httpService) handleGetOrderById() gin.HandlerFunc {
 			common.WriteErrorResponse(c, core.ErrBadRequest.WithDebug("invalid order id"))
 			return
 		}
-		result, err := query.NewGetOrderByIdQuery(s.sctx, requester).Execute(c.Request.Context(), orderID)
+		productRepo := grpcclient.NewProductGRPCClient(product.NewProductClient(s.grpcProductClientConn))
+		result, err := query.NewGetOrderByIdQuery(s.sctx, requester, productRepo).Execute(c.Request.Context(), orderID)
 		if err != nil {
 			common.WriteErrorResponse(c, err)
 			return
