@@ -1,3 +1,6 @@
+# Golang Simple Service
+A simple Golang service with a REST API, using PostgreSQL as the database, and Docker for containerization.
+
 # Notes
 
 - Handler -> Business [-> Repository] -> Storage (tầng trên dùng interface của tầng dưới)
