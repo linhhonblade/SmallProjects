@@ -50,7 +50,6 @@ func (uc *loginEmailPasswordUC) LoginEmailPassword(ctx context.Context, dto Emai
 	}
 
 	// 5.Return token response dto
-
 	return &TokenResponseDTO{
 		AccessToken:       accessToken,
 		AccessTokenExpIn:  uc.tokenProvider.TokenExpiredInSeconds(),

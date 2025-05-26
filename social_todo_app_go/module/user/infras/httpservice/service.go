@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 	"net/http"
 	"social_todo_app_go/common"
+	"social_todo_app_go/component"
 	"social_todo_app_go/middleware"
 	"social_todo_app_go/module/attachment"
 	"social_todo_app_go/module/user/infras/repository"
@@ -73,7 +74,18 @@ func (s service) handleLoginEmailPassword() gin.HandlerFunc {
 			common.WriteErrorResponse(c, err)
 			return
 		}
-		c.JSON(http.StatusOK, core.ResponseData(resp))
+
+		// Đưa access token và refresh token vào cookie
+		// Chỉ trả về thời gian hết hạn của access token và refresh token trong response
+		appDomain := s.sctx.MustGet(common.KeyConfig).(interface{ GetAppDomain() string }).GetAppDomain()
+		appEnv := s.sctx.MustGet(common.KeyConfig).(interface{ GetAppEnv() string }).GetAppEnv()
+		tokenProvider := s.sctx.MustGet(common.KeyJWT).(component.TokenProvider)
+		c.SetCookie("access_token", resp.AccessToken, tokenProvider.TokenExpiredInSeconds(), "/", appDomain, appEnv == "prod", true)
+		c.SetCookie("refresh_token", resp.RefreshToken, tokenProvider.TokenRefreshInSeconds(), "/", appDomain, appEnv == "prod", true)
+		c.JSON(http.StatusOK, core.ResponseData(usecase.TokenExpResponseDTO{
+			AccessTokenExpIn:  resp.AccessTokenExpIn,
+			RefreshTokenExpIn: resp.RefreshTokenExpIn,
+		}))
 	}
 }
 
@@ -102,7 +114,18 @@ func (s service) handleRefreshToken() gin.HandlerFunc {
 			common.WriteErrorResponse(c, err)
 			return
 		}
-		c.JSON(http.StatusOK, core.ResponseData(data))
+
+		// Đưa access token và refresh token vào cookie
+		// Chỉ trả về thời gian hết hạn của access token và refresh token trong response
+		appDomain := s.sctx.MustGet(common.KeyConfig).(interface{ GetAppDomain() string }).GetAppDomain()
+		appEnv := s.sctx.MustGet(common.KeyConfig).(interface{ GetAppEnv() string }).GetAppEnv()
+		tokenProvider := s.sctx.MustGet(common.KeyJWT).(component.TokenProvider)
+		c.SetCookie("access_token", data.AccessToken, tokenProvider.TokenExpiredInSeconds(), "/", appDomain, appEnv == "prod", true)
+		c.SetCookie("refresh_token", data.RefreshToken, tokenProvider.TokenRefreshInSeconds(), "/", appDomain, appEnv == "prod", true)
+		c.JSON(http.StatusOK, core.ResponseData(usecase.TokenExpResponseDTO{
+			AccessTokenExpIn:  data.AccessTokenExpIn,
+			RefreshTokenExpIn: data.RefreshTokenExpIn,
+		}))
 	}
 }
 

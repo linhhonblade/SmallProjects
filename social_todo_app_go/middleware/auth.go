@@ -14,7 +14,8 @@ type AuthClient interface {
 
 func RequireAuth(ac AuthClient) func(context2 *gin.Context) {
 	return func(c *gin.Context) {
-		token, err := extractTokenFromHeaderString(c.GetHeader("Authorization"))
+		//token, err := extractTokenFromHeaderString(c.GetHeader("Authorization"))
+		token, err := extractTokenFromCookie(c)
 		if err != nil {
 			common.WriteErrorResponse(c, err)
 			c.Abort()
@@ -40,4 +41,15 @@ func extractTokenFromHeaderString(s string) (string, error) {
 		return "", errors.New("missing access token")
 	}
 	return parts[1], nil
+}
+
+func extractTokenFromCookie(c *gin.Context) (string, error) {
+	tokenStr, err := c.Cookie("access_token")
+	if err != nil {
+		return "", err
+	}
+	if tokenStr == "" {
+		return "", errors.New("missing access token in cookie")
+	}
+	return tokenStr, nil
 }

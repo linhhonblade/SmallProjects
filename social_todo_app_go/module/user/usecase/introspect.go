@@ -49,3 +49,32 @@ func (uc *introspectUsecase) IntrospectToken(ctx context.Context, tokenString st
 		user.Status(),
 	), nil
 }
+
+func (uc *introspectUsecase) IntrospectCookie(ctx context.Context, tokenString string) (common.Requester, error) {
+	claims, err := uc.tokenParser.ParseToken(ctx, tokenString)
+	if err != nil {
+		return nil, err
+	}
+	userId := uuid.MustParse(claims.Subject)
+	sessionId := uuid.MustParse(claims.ID)
+	_, err = uc.sessionQueryRepo.Find(ctx, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	user, err := uc.userQueryRepo.FindByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Status() == "banned" {
+		return nil, errors.New("user is banned")
+	}
+	return common.NewRequester(
+		userId,
+		sessionId,
+		user.FirstName(),
+		user.LastName(),
+		user.Role().String(),
+		user.Status(),
+	), nil
+}

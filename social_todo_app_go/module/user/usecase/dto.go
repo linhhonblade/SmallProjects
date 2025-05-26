@@ -24,6 +24,11 @@ type TokenResponseDTO struct {
 	RefreshTokenExpIn int    `json:"refresh_token_exp_in"`
 }
 
+type TokenExpResponseDTO struct {
+	AccessTokenExpIn  int `json:"access_token_exp_in"`
+	RefreshTokenExpIn int `json:"refresh_token_exp_in"`
+}
+
 type SetSingleImageDTO struct {
 	ImageId   uuid.UUID        `json:"image_id"`
 	Requester common.Requester `json:"-"`

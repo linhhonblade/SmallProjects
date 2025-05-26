@@ -13,6 +13,8 @@ type config struct {
 	defaultDraftOrderDuration float64
 	portGRPCProduct           int
 	urlGRPCProductServer      string
+	appDomain                 string
+	appEnv                    string
 }
 
 func NewConfig(id string) *config {
@@ -58,6 +60,16 @@ func (c *config) InitFlags() {
 		"grpc-product-url",
 		":8001",
 		"URL of product gRPC")
+	flag.StringVar(
+		&c.appDomain,
+		"app-domain",
+		"localhost",
+		"Domain of the application, used for set cookie")
+	flag.StringVar(
+		&c.appEnv,
+		"env",
+		"dev",
+		"Environment of the application, used for set cookie")
 }
 
 func (c *config) Activate(context sctx.ServiceContext) error {
@@ -86,4 +98,12 @@ func (c config) GetPortGRPCProduct() int {
 
 func (c config) GetUrlGRPCProductServer() string {
 	return c.urlGRPCProductServer
+}
+
+func (c config) GetAppDomain() string {
+	return c.appDomain
+}
+
+func (c config) GetAppEnv() string {
+	return c.appEnv
 }
