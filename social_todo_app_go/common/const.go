@@ -1,6 +1,8 @@
 package common
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 const (
 	KeyRequester = "requester"
@@ -10,6 +12,7 @@ const (
 	KeyConfig    = "config"
 	KeyNATS      = "nats"
 	KeyLocalPS   = "local_ps"
+	KeyRedis     = "redis"
 
 	TopicUserAvtChanged = "user.avatar.changed"
 )

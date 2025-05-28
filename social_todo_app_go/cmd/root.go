@@ -50,6 +50,7 @@ func newService() sctx.ServiceContext {
 		sctx.WithComponent(component.NewConfig(common.KeyConfig)),
 		sctx.WithComponent(component.NewNATSComponent(common.KeyNATS)),
 		sctx.WithComponent(pubsub.NewLocalPubSub(common.KeyLocalPS)),
+		sctx.WithComponent(component.NewSRedisComponent(common.KeyRedis)),
 	)
 }
 
@@ -70,9 +71,11 @@ var rootCmd = &cobra.Command{
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		//r.Use(middleware.AllowCors())
 		tokenProvider := service.MustGet(common.KeyJWT).(component.TokenProvider)
+		redisCli := service.MustGet(common.KeyRedis).(component.RedisClient).GetRedisClient()
 
 		r.Use(middleware.Recovery())
-		authClient := usecase.NewIntrospectUC(repository.NewUserRepo(db), repository.NewUserSessionPostgresRepo(db), tokenProvider)
+		authClient := usecase.NewIntrospectUC(repository.NewUserRepo(db), repository.NewSessionRedisRepo(redisCli), tokenProvider)
+		//authClient := usecase.NewIntrospectUC(repository.NewUserRepo(db), repository.NewUserSessionPostgresRepo(db), tokenProvider)
 		r.Static("/static", "./static")
 
 		v1 := r.Group("/v1")
@@ -88,7 +91,7 @@ var rootCmd = &cobra.Command{
 			// @Router /v1/upload [put]
 			v1.PUT("/upload", upload.Upload(db))
 
-			userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider)))
+			userUC := usecase.NewUCWithBuilder(builder.NewComplexBuilder(builder.NewSimpleBuilder(db, tokenProvider, redisCli)))
 			httpservice.NewUserService(userUC, service).SetAuthClient(authClient).Routes(v1)
 		}
 
@@ -101,7 +104,8 @@ var rootCmd = &cobra.Command{
 
 		// Revoke token
 		r.DELETE("/v1/revoke-token", middleware.RequireAuth(authClient), func(c *gin.Context) {
-			repo := repository.NewUserSessionPostgresRepo(db)
+			repo := repository.NewSessionRedisRepo(redisCli) // use Redis session repo
+			//repo := repository.NewUserSessionPostgresRepo(db)
 			requester := c.MustGet(common.KeyRequester).(common.Requester) // cast from any to Requester
 			if err := repo.Delete(c.Request.Context(), requester.TokenId()); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -168,4 +172,6 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	rootCmd.AddCommand(redisCmd)
 }

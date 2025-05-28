@@ -2,6 +2,7 @@ package builder
 
 import (
 	"context"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"social_todo_app_go/common"
@@ -11,12 +12,13 @@ import (
 )
 
 type simpleBuilder struct {
-	db *gorm.DB
-	tp usecase.TokenProvider
+	db          *gorm.DB
+	tp          usecase.TokenProvider
+	redisClient *redis.Client
 }
 
-func NewSimpleBuilder(db *gorm.DB, tp usecase.TokenProvider) simpleBuilder {
-	return simpleBuilder{db: db, tp: tp}
+func NewSimpleBuilder(db *gorm.DB, tp usecase.TokenProvider, redisCli *redis.Client) simpleBuilder {
+	return simpleBuilder{db: db, tp: tp, redisClient: redisCli}
 }
 
 func (s simpleBuilder) BuildUserQueryRepo() usecase.UserQueryRepository {
@@ -36,15 +38,18 @@ func (s simpleBuilder) BuildTokenProvider() usecase.TokenProvider {
 }
 
 func (s simpleBuilder) BuildSessionQueryRepo() usecase.SessionQueryRepository {
-	return repository.NewUserSessionPostgresRepo(s.db)
+	return repository.NewSessionRedisRepo(s.redisClient)
+	//return repository.NewUserSessionPostgresRepo(s.db)
 }
 
 func (s simpleBuilder) BuildSessionCmdRepo() usecase.SessionCommandRepository {
-	return repository.NewUserSessionPostgresRepo(s.db)
+	return repository.NewSessionRedisRepo(s.redisClient)
+	//return repository.NewUserSessionPostgresRepo(s.db)
 }
 
 func (s simpleBuilder) BuildSessionRepo() usecase.SessionRepository {
-	return repository.NewUserSessionPostgresRepo(s.db)
+	//return repository.NewUserSessionPostgresRepo(s.db)
+	return repository.NewSessionRedisRepo(s.redisClient)
 }
 
 func (s simpleBuilder) BuildUserRepo() usecase.UserRepository {
